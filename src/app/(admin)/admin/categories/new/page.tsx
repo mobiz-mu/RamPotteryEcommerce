@@ -1,0 +1,15 @@
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import CategoryForm from "@/components/admin/CategoryForm";
+
+export default function AdminNewCategoryPage() {
+  return (
+    <div>
+      <AdminPageHeader
+        eyebrow="Catalog"
+        title="Add New Category"
+        description="Create a category with slug, SEO, image, and storefront visibility."
+      />
+      <CategoryForm />
+    </div>
+  );
+}
