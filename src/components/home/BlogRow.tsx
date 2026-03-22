@@ -23,10 +23,13 @@ export default function BlogRow() {
               "/images/blogs/handcrafted-pottery-tradition.jpg",
             ];
 
+            const imageValue =
+              "image" in post && typeof post.image === "string" ? post.image : "";
+
             const imageSrc =
-              ("image" in post && post.image && post.image.trim() !== "")
-                ? post.image
-                : fallbackImages[index % fallbackImages.length];
+              imageValue.trim() !== ""
+              ? imageValue
+              : fallbackImages[index % fallbackImages.length];
 
             return (
               <Link

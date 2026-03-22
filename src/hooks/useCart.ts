@@ -35,6 +35,24 @@ export function useCart() {
     window.dispatchEvent(new CustomEvent("cart-updated"));
   }
 
+  function addItem(item: CartItem) {
+    const found = items.find((existing) => existing.id === item.id);
+
+    let next: CartItem[];
+
+    if (found) {
+      next = items.map((existing) =>
+        existing.id === item.id
+          ? { ...existing, quantity: existing.quantity + item.quantity }
+          : existing
+      );
+    } else {
+      next = [...items, item];
+    }
+
+    persist(next);
+  }
+
   function updateQuantity(id: string, quantity: number) {
     const nextQty = Math.max(1, quantity);
     const next = items.map((item) =>
@@ -53,7 +71,11 @@ export function useCart() {
   }
 
   const subtotal = useMemo(
-    () => items.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0), 0),
+    () =>
+      items.reduce(
+        (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0),
+        0
+      ),
     [items]
   );
 
@@ -67,6 +89,7 @@ export function useCart() {
     loaded,
     subtotal,
     totalItems,
+    addItem,
     updateQuantity,
     removeItem,
     clearCart,

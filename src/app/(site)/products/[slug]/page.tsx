@@ -16,6 +16,12 @@ type ProductImage = {
   sort_order: number | null;
 };
 
+type ProductCategory = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
 type Product = {
   id: string;
   title: string;
@@ -31,13 +37,24 @@ type Product = {
   is_active: boolean;
   is_in_stock: boolean;
   category_id: string | null;
-  categories?: {
-    id: string;
-    name: string;
-    slug: string;
-  } | null;
+  categories?: ProductCategory | null;
   product_images: ProductImage[] | null;
 };
+
+type RawProduct = Omit<Product, "categories"> & {
+  categories?: ProductCategory | ProductCategory[] | null;
+};
+
+function normalizeProduct(raw: RawProduct): Product {
+  const normalizedCategory = Array.isArray(raw.categories)
+    ? raw.categories[0] ?? null
+    : raw.categories ?? null;
+
+  return {
+    ...raw,
+    categories: normalizedCategory,
+  };
+}
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
@@ -68,7 +85,7 @@ export default async function ProductPage({ params }: Props) {
   const { slug } = await params;
   const supabase = await createClient();
 
-  const { data: product } = await supabase
+  const { data: rawProduct } = await supabase
     .from("products")
     .select(`
       id,
@@ -100,9 +117,11 @@ export default async function ProductPage({ params }: Props) {
     `)
     .eq("slug", slug)
     .eq("is_active", true)
-    .maybeSingle<Product>();
+    .maybeSingle();
 
-  if (!product) return notFound();
+  if (!rawProduct) return notFound();
+
+  const product = normalizeProduct(rawProduct as RawProduct);
 
   let relatedProducts: Product[] = [];
 
@@ -143,7 +162,7 @@ export default async function ProductPage({ params }: Props) {
       .order("created_at", { ascending: false })
       .limit(4);
 
-    relatedProducts = (data as Product[]) ?? [];
+    relatedProducts = ((data ?? []) as RawProduct[]).map(normalizeProduct);
   }
 
   return (
