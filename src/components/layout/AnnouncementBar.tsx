@@ -1,64 +1,40 @@
 import { getAnnouncementBar } from "@/lib/server-data";
 
-function ClayPotIcon() {
+function PotteryIcon() {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      className="h-4 w-4 shrink-0"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M7 4h10" />
-      <path d="M9 4c0 2-1.5 2.5-2.5 3.2C5.6 7.9 5 9.2 5 11c0 4 3.1 8 7 8s7-4 7-8c0-1.8-.6-3.1-1.5-3.8C16.5 6.5 15 6 15 4" />
-      <path d="M8 11c1.2.7 2.6 1 4 1s2.8-.3 4-1" />
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-3.5 w-3.5 shrink-0" fill="none">
+      <path d="M8 4h8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M9 4c0 2.1-3 2.5-3 6.7C6 15.4 8.7 20 12 20s6-4.6 6-9.3C18 6.5 15 6.1 15 4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7.5 11.2c2.8 1.2 6.2 1.2 9 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
     </svg>
   );
 }
 
-function SparkIcon() {
+function GiftIcon() {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      className="h-4 w-4 shrink-0"
-      fill="currentColor"
-    >
-      <path d="M13.2 2 5.8 13h4.8L10.8 22 18.2 11h-4.8L13.2 2Z" />
-    </svg>
-  );
-}
-
-function LeafIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      className="h-4 w-4 shrink-0"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M19 5c-6.5 0-11 3.6-11 9 0 2.6 1.7 5 4.7 5C18 19 21 13.8 21 8V5h-2Z" />
-      <path d="M8 16c2-2.2 4.7-4 8-5.2" />
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-3.5 w-3.5 shrink-0" fill="none">
+      <path d="M4 9h16v11H4V9Z" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M3 6h18v3H3V6Z" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M12 6v14" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M12 6c-2.8 0-4.2-3.2-1.7-3.2C11.7 2.8 12 6 12 6Zm0 0c2.8 0 4.2-3.2 1.7-3.2C12.3 2.8 12 6 12 6Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
     </svg>
   );
 }
 
 function StarIcon() {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      className="h-4 w-4 shrink-0"
-      fill="currentColor"
-    >
-      <path d="m12 2.8 2.5 5.1 5.6.8-4 3.9.9 5.5L12 15.5 7 18.1l.9-5.5-4-3.9 5.6-.8L12 2.8Z" />
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-3.5 w-3.5 shrink-0" fill="currentColor">
+      <path d="m12 3 2.5 5.1 5.6.8-4 3.9.9 5.5-5-2.7-5 2.7.9-5.5-4-3.9 5.6-.8L12 3Z" />
+    </svg>
+  );
+}
+
+function TruckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-3.5 w-3.5 shrink-0" fill="none">
+      <path d="M3 6h11v10H3V6Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+      <path d="M14 10h4l3 3v3h-7v-6Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+      <path d="M7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm10 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" stroke="currentColor" strokeWidth="1.7" />
     </svg>
   );
 }
@@ -67,48 +43,49 @@ export default async function AnnouncementBar() {
   const bar = await getAnnouncementBar();
 
   const phrases = [
-    bar?.text || "Quality Matters — Handcrafted Pottery Made with Passion in Mauritius",
-    "Premium Clay Creations for Elegant Homes, Rituals & Gifting",
+    bar?.text || "Handcrafted Pottery Made with Passion in Mauritius",
+    "Premium Clay Creations for Homes, Hotels, Rituals & Gifting",
     "Authentic Craftsmanship • Timeless Design • Luxury Pottery Finish",
-    "Shop Ram Pottery for Best Sellers, New Arrivals & Unique Handmade Pieces",
+    "Shop Best Sellers, New Arrivals & Unique Handmade Pieces",
   ];
 
-  const items = [...phrases, ...phrases];
+  const icons = [PotteryIcon, GiftIcon, StarIcon, TruckIcon];
+  const items = [...phrases, ...phrases, ...phrases];
 
   return (
-    <div className="relative overflow-hidden border-b border-red-800 bg-red-600 text-white">
+    <div className="relative overflow-hidden border-b border-red-900/30 bg-gradient-to-r from-[#8f1111] via-[#c51616] to-[#8f1111] text-white shadow-[0_1px_0_rgba(255,255,255,0.18)_inset]">
       <style>{`
-        @keyframes ram-pottery-marquee {
-          0% {
-            transform: translate3d(0, 0, 0);
-          }
-          100% {
-            transform: translate3d(-50%, 0, 0);
-          }
+        @keyframes ramPotteryPremiumMarquee {
+          from { transform: translate3d(0, 0, 0); }
+          to { transform: translate3d(-33.333%, 0, 0); }
         }
       `}</style>
 
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-red-600 to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-red-600 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent,rgba(255,255,255,0.16),transparent)]" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-[#8f1111] to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-[#8f1111] to-transparent" />
 
-      <div className="flex min-h-11 items-center">
+      <div className="flex h-8 items-center sm:h-9">
         <div
-          className="flex min-w-max items-center"
-          style={{ animation: "ram-pottery-marquee 42s linear infinite" }}
+          className="flex min-w-max items-center will-change-transform"
+          style={{ animation: "ramPotteryPremiumMarquee 36s linear infinite" }}
         >
-          {items.map((phrase, index) => (
-            <div
-              key={`${phrase}-${index}`}
-              className="flex items-center gap-3 whitespace-nowrap px-6 text-xs font-semibold uppercase tracking-[0.18em] sm:px-8 sm:text-sm"
-            >
-              {index % 4 === 0 ? <ClayPotIcon /> : null}
-              {index % 4 === 1 ? <SparkIcon /> : null}
-              {index % 4 === 2 ? <LeafIcon /> : null}
-              {index % 4 === 3 ? <StarIcon /> : null}
-              <span>{phrase}</span>
-              <span className="opacity-80">•</span>
-            </div>
-          ))}
+          {items.map((phrase, index) => {
+            const Icon = icons[index % icons.length];
+
+            return (
+              <div
+                key={`${phrase}-${index}`}
+                className="flex items-center gap-2 whitespace-nowrap px-5 text-[10px] font-bold uppercase tracking-[0.18em] sm:px-7 sm:text-[11px]"
+              >
+                <span className="flex h-5 w-5 items-center justify-center rounded-full border border-white/25 bg-white/10">
+                  <Icon />
+                </span>
+                <span>{phrase}</span>
+                <span className="h-1 w-1 rounded-full bg-white/70" />
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, ShoppingBag, Star, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 type Category = {
   id: string;
@@ -218,15 +218,16 @@ function ProductCard({
 export default function CategoryRowClient({ rows = [] }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [lastAdded, setLastAdded] = useState<CartDrawerItem | null>(null);
+  const [cartItems, setCartItems] = useState<any[]>([]);
 
-  const cartItems = useMemo(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      return JSON.parse(localStorage.getItem("ram-pottery-cart") || "[]");
-    } catch {
-      return [];
-    }
-  }, [drawerOpen]);
+useEffect(() => {
+  try {
+    setCartItems(JSON.parse(localStorage.getItem("ram-pottery-cart") || "[]"));
+  } catch {
+    setCartItems([]);
+  }
+}, [drawerOpen]);
+  
 
   const cartTotal = cartItems.reduce(
     (sum: number, item: any) => sum + Number(item.price ?? 0) * Number(item.quantity ?? 0),

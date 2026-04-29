@@ -4,6 +4,7 @@ import CategoryExplorer from "@/components/home/CategoryExplorer";
 import CategoryRow from "@/components/home/CategoryRow";
 import OurStory from "@/components/home/OurStory";
 import BlogRow from "@/components/home/BlogRow";
+import OurClients from "@/components/home/OurClients";
 import Newsletter from "@/components/home/Newsletter";
 import GoogleReviewsStrip from "@/components/home/GoogleReviewsStrip";
 
@@ -15,6 +16,7 @@ export default function HomePage() {
       <CategoryExplorer />
       <CategoryRow />
       <OurStory />
+      <OurClients />
       <BlogRow />
       <GoogleReviewsStrip />
       <Newsletter />
