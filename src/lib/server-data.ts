@@ -5,6 +5,7 @@ import {
   products as mockProducts,
 } from "@/data/mock";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 function hasRealSupabaseEnv() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -128,8 +129,8 @@ export async function getProducts(opts?: {
           id,
           image_url,
           alt_text,
-          is_primary,
-          sort_order
+          sort_order,
+          is_primary
         )
       `)
       .eq("active", true)
@@ -208,4 +209,117 @@ export async function getLatestBlogs(limit = 3) {
   } catch {
     return mockBlogs.slice(0, limit);
   }
+}
+
+export async function getShopProducts() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("products")
+    .select(`
+      id,
+      title,
+      slug,
+      short_description,
+      description,
+      price,
+      compare_at_price,
+      badge,
+      category_id,
+      stock_qty,
+      is_active,
+      is_in_stock,
+      created_at,
+      categories:category_id (
+        id,
+        name,
+        slug
+      ),
+      product_images (
+        id,
+        image_url,
+        alt_text,
+        sort_order,
+        is_primary
+      )
+    `)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
+    .limit(500);
+
+  if (error) {
+    console.error("getShopProducts error:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((item: any) => {
+    const sortedImages = [...(item.product_images ?? [])].sort((a, b) => {
+      if (a.is_primary && !b.is_primary) return -1;
+      if (!a.is_primary && b.is_primary) return 1;
+      return Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0);
+    });
+
+    const primaryImage =
+      sortedImages.find((img: any) => img.is_primary)?.image_url ||
+      sortedImages[0]?.image_url ||
+      "/images/placeholder-product.jpg";
+
+    return {
+      id: item.id,
+      title: item.title,
+      slug: item.slug,
+      short_description: item.short_description || "",
+      shortDescription: item.short_description || "",
+      description: item.description || "",
+      price: Number(item.price || 0),
+      compare_at_price: item.compare_at_price
+        ? Number(item.compare_at_price)
+        : null,
+      compareAtPrice: item.compare_at_price
+        ? Number(item.compare_at_price)
+        : null,
+      badge: item.badge || "",
+      category_id: item.category_id,
+      stock_qty: item.stock_qty || 0,
+      stockQty: item.stock_qty || 0,
+      is_active: item.is_active,
+      is_in_stock: item.is_in_stock,
+      image: primaryImage,
+      imageUrl: primaryImage,
+      product_images: sortedImages,
+      images: sortedImages.map((img: any) => ({
+        id: img.id,
+        imageUrl: img.image_url,
+        image_url: img.image_url,
+        alt: img.alt_text || item.title,
+        alt_text: img.alt_text || item.title,
+        isPrimary: img.is_primary || false,
+        is_primary: img.is_primary || false,
+      })),
+      category: item.categories
+        ? {
+            id: item.categories.id,
+            name: item.categories.name,
+            slug: item.categories.slug,
+          }
+        : undefined,
+      categories: item.categories,
+    };
+  });
+}
+
+export async function getShopCategories() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("categories")
+    .select("id, name, slug")
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error("getShopCategories error:", error.message);
+    return [];
+  }
+
+  return data ?? [];
 }
