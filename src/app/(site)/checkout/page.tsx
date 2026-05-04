@@ -3,17 +3,17 @@ import OrderSummary from "@/components/checkout/OrderSummary";
 
 export default function CheckoutPage() {
   return (
-    <div className="bg-[#fafafa]">
+    <main className="bg-[#faf7f1]">
       <section className="container-padded section-space">
-        <div className="mb-10">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-red-600">
+        <div className="mb-10 text-center">
+          <p className="mb-3 text-xs font-extrabold uppercase tracking-[0.3em] text-red-700">
             Checkout
           </p>
-          <h1 className="text-4xl font-semibold tracking-tight text-neutral-950">
+          <h1 className="text-4xl font-extrabold tracking-tight text-neutral-950">
             Complete Your Order
           </h1>
-          <p className="mt-4 max-w-2xl text-neutral-600">
-            Fill in your details, create your order, and confirm instantly on WhatsApp.
+          <p className="mx-auto mt-4 max-w-2xl text-neutral-600">
+            Add your details and send your order directly to Ram Pottery on WhatsApp.
           </p>
         </div>
 
@@ -22,6 +22,6 @@ export default function CheckoutPage() {
           <OrderSummary />
         </div>
       </section>
-    </div>
+    </main>
   );
 }
