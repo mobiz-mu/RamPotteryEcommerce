@@ -158,21 +158,41 @@ h6 {
 }
 
 .header-link {
+  position: relative;
   display: inline-flex;
-  height: 100%;
   align-items: center;
-  font-size: 15px;
-  font-weight: 700;
+  height: 100%;
+  color: #7f1d1d;
+  font-size: 13px;
+  font-weight: 800;
   letter-spacing: 0.12em;
-  color: #111827;
-  line-height: 1;
-  transition: color 0.2s ease;
+  text-transform: uppercase;
+  transition:
+    color 0.3s ease,
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.header-link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 31px;
+  width: 0;
+  height: 2px;
+  background: #991b1b;
+  transform: translateX(-50%);
+  transition: width 0.3s ease;
 }
 
 .header-link:hover {
-  color: #b91c1c;
+  color: #991b1b;
+  transform: translateY(-1px);
 }
 
+.header-link:hover::after {
+  width: 100%;
+}
 @keyframes slideMenuIn {
   from {
     transform: translateX(-100%);
@@ -193,4 +213,304 @@ h6 {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes heroButtonPulse {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+  }
+
+  50% {
+    transform: translateY(-3px) scale(1.035);
+    box-shadow: 0 24px 75px rgba(0, 0, 0, 0.48);
+  }
+}
+
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes drawerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes whatsappFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-5px) rotate(-2deg);
+  }
+}
+
+/* Extra smooth scrolling across the full website */
+html {
+  scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-padding-top: 110px;
+}
+
+body {
+  overscroll-behavior-y: none;
+}
+
+/* Smoother anchor jumps for sections */
+[id] {
+  scroll-margin-top: 110px;
+}
+
+/* Premium smooth momentum scrolling on mobile */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Smooth horizontal sliders / scroll areas */
+.overflow-x-auto,
+.overflow-y-auto,
+[class*="overflow-x-auto"],
+[class*="overflow-y-auto"] {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbar helper if needed */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* =========================================================
+   Ram Pottery - Fast Loading / Rendering Performance CSS
+   Helps pages feel faster across mobile, tablet and desktop
+   ========================================================= */
+
+/* Better browser rendering */
+html {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Avoid horizontal layout bugs that create expensive repaints */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Do not apply content-visibility to sticky/fixed items */
+.sticky,
+.fixed,
+[class*="sticky"],
+[class*="fixed"] {
+  content-visibility: visible;
+  contain-intrinsic-size: auto;
+}
+
+/* Faster image/video rendering */
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Prevent image dragging and reduce unnecessary browser work */
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* Better media performance */
+video {
+  object-fit: cover;
+  background-color: #000;
+}
+
+/* GPU-friendly animations */
+.transition,
+[class*="transition"],
+[class*="hover:"],
+[class*="group-hover:"] {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Smooth transform animations without layout recalculation */
+[class*="hover:-translate"],
+[class*="hover:scale"],
+[class*="group-hover:scale"],
+[class*="translate-"],
+[class*="scale-"] {
+  will-change: transform;
+}
+
+/* Reduce paint cost for premium cards */
+.shadow-sm,
+[class*="shadow-"] {
+  transform: translateZ(0);
+}
+
+/* Improve scroll performance on mobile */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbars for horizontal sliders when using no-scrollbar */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Fast tap response on mobile */
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+/* Prevent font-size zoom jump on iOS inputs */
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+@media (min-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 14px;
+  }
+}
+
+/* Reduce expensive animations for users/devices requesting less motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  [class*="hover:-translate"],
+  [class*="hover:scale"],
+  [class*="group-hover:scale"] {
+    transform: none !important;
+  }
+}
+
+/* Smaller mobile paint cost */
+@media (max-width: 640px) {
+  section,
+  article,
+  footer,
+  main > div {
+    contain-intrinsic-size: 1px 560px;
+  }
+
+  [class*="shadow-[0_28px"],
+  [class*="shadow-[0_30px"],
+  [class*="shadow-[0_24px"],
+  [class*="shadow-[0_22px"] {
+    box-shadow: 0 12px 36px rgba(15, 10, 5, 0.08) !important;
+  }
+}
+
+/* FIX: restore normal mouse scrolling */
+html,
+body {
+  height: auto !important;
+  min-height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+}
+
+/* Do not let performance CSS break page scrolling */
+main,
+section,
+article,
+header,
+footer {
+  overflow: visible;
+}
+
+/* Safer performance rendering: disable broad content-visibility if scroll has issue */
+section,
+article,
+footer,
+header,
+main > div {
+  content-visibility: visible !important;
+  contain-intrinsic-size: auto !important;
+}
+
+/* Keep smooth scrolling only */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent fixed overlays from blocking wheel scroll unless actually opened */
+body {
+  overscroll-behavior-y: auto !important;
 }

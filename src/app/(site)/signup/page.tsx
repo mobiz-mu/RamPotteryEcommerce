@@ -3,13 +3,25 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { UserPlus } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  Lock,
+  Mail,
+  ShieldCheck,
+  User,
+  UserPlus,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 export default function SignupPage() {
   const router = useRouter();
+
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -18,112 +30,197 @@ export default function SignupPage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
 
-    const response = await fetch("/api/auth/signup", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(form),
-    });
+    const fullName = form.fullName.trim();
+    const email = form.email.trim().toLowerCase();
+    const password = form.password;
 
-    const data = await response.json();
-    setLoading(false);
-
-    if (!response.ok) {
-      toast.error(data?.error || "Signup failed.");
+    if (!fullName || !email || !password) {
+      toast.error("Please fill in all fields.");
       return;
     }
 
-    toast.success("Account created successfully.");
-    router.push("/login");
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName,
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data?.error || "Signup failed.");
+        setLoading(false);
+        return;
+      }
+
+      toast.success("Account created successfully. Please login.");
+      router.replace("/login?created=1");
+      router.refresh();
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+      setLoading(false);
+    }
   }
 
   return (
-    <main className="min-h-screen bg-white px-5 py-16 sm:px-8 lg:px-10">
-      <section className="mx-auto max-w-xl">
-        <div className="mb-8 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-700 text-white shadow-[0_14px_35px_rgba(185,28,28,0.25)]">
-            <UserPlus className="h-6 w-6" />
-          </div>
-
-          <p className="mt-5 text-xs font-extrabold uppercase tracking-[0.34em] text-red-700">
+    <main className="min-h-screen bg-white px-4 py-8 text-neutral-950 sm:px-6 lg:px-8">
+      <section className="mx-auto grid min-h-[calc(100vh-90px)] max-w-6xl items-center gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="hidden lg:block">
+          <p className="text-xs font-black uppercase tracking-[0.34em] text-red-900">
             Ram Pottery Account
           </p>
 
-          <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-neutral-950">
-            Create Your Account
+          <h1 className="mt-5 max-w-xl text-5xl font-black leading-[0.98] tracking-[-0.06em] text-neutral-950">
+            Create your account in seconds.
           </h1>
 
-          <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-neutral-600">
-            Join Ram Pottery Mauritius to save your wishlist and enjoy a smoother
-            shopping experience.
+          <p className="mt-6 max-w-lg text-base leading-8 text-neutral-600">
+            Enjoy a smoother shopping experience with Ram Pottery Mauritius.
+            Create your account, login instantly, and continue exploring
+            handcrafted pottery collections.
           </p>
+
+          <div className="mt-8 grid max-w-md gap-3">
+            {[
+              "No email verification required",
+              "Secure Supabase customer account",
+              "Fast login after signup",
+            ].map((item) => (
+              <div
+                key={item}
+                className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-5 py-4 text-sm font-bold text-neutral-700 shadow-[0_12px_35px_rgba(15,10,5,0.045)]"
+              >
+                <ShieldCheck className="h-4 w-4 text-red-900" />
+                {item}
+              </div>
+            ))}
+          </div>
         </div>
 
-        <form
-          onSubmit={onSubmit}
-          className="relative overflow-hidden rounded-[32px] border border-neutral-200 bg-white p-7 shadow-[0_22px_70px_rgba(0,0,0,0.08)] sm:p-8"
-        >
-          <div className="absolute inset-x-8 bottom-0 h-[3px] rounded-full bg-red-700 shadow-[0_0_18px_rgba(185,28,28,0.85)]" />
+        <div className="mx-auto w-full max-w-[430px]">
+          <div className="rounded-[30px] border border-neutral-200 bg-white p-5 shadow-[0_24px_90px_rgba(15,10,5,0.1)] sm:p-7">
+            <div className="mb-6 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-900">
+                <UserPlus className="h-5 w-5" />
+              </div>
 
-          <div className="space-y-5">
-            <Field label="Full Name">
-              <Input
-                required
-                value={form.fullName}
-                onChange={(e) =>
-                  setForm((s) => ({ ...s, fullName: e.target.value }))
-                }
-                placeholder="Your full name"
-                className="h-12 rounded-2xl border-neutral-200 bg-[#fafafa]"
-              />
-            </Field>
+              <h2 className="mt-4 text-3xl font-black tracking-[-0.05em] text-neutral-950">
+                Sign up
+              </h2>
 
-            <Field label="Email Address">
-              <Input
-                required
-                type="email"
-                value={form.email}
-                onChange={(e) =>
-                  setForm((s) => ({ ...s, email: e.target.value }))
-                }
-                placeholder="your@email.com"
-                className="h-12 rounded-2xl border-neutral-200 bg-[#fafafa]"
-              />
-            </Field>
+              <p className="mt-2 text-sm leading-6 text-neutral-500">
+                Create your Ram Pottery account.
+              </p>
+            </div>
 
-            <Field label="Password">
-              <Input
-                required
-                minLength={6}
-                type="password"
-                value={form.password}
-                onChange={(e) =>
-                  setForm((s) => ({ ...s, password: e.target.value }))
-                }
-                placeholder="Create password"
-                className="h-12 rounded-2xl border-neutral-200 bg-[#fafafa]"
-              />
-            </Field>
+            <form onSubmit={onSubmit} className="space-y-3">
+              <Field label="Full Name">
+                <div className="flex h-12 items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-4 transition focus-within:border-red-900/35 focus-within:ring-4 focus-within:ring-red-900/10">
+                  <User className="h-4 w-4 text-red-900" />
+                  <Input
+                    required
+                    value={form.fullName}
+                    onChange={(e) =>
+                      setForm((s) => ({ ...s, fullName: e.target.value }))
+                    }
+                    placeholder="Your full name"
+                    autoComplete="name"
+                    className="h-full border-0 bg-transparent px-0 text-sm font-semibold shadow-none outline-none focus-visible:ring-0"
+                  />
+                </div>
+              </Field>
+
+              <Field label="Email Address">
+                <div className="flex h-12 items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-4 transition focus-within:border-red-900/35 focus-within:ring-4 focus-within:ring-red-900/10">
+                  <Mail className="h-4 w-4 text-red-900" />
+                  <Input
+                    required
+                    type="email"
+                    value={form.email}
+                    onChange={(e) =>
+                      setForm((s) => ({ ...s, email: e.target.value }))
+                    }
+                    placeholder="your@email.com"
+                    autoComplete="email"
+                    className="h-full border-0 bg-transparent px-0 text-sm font-semibold shadow-none outline-none focus-visible:ring-0"
+                  />
+                </div>
+              </Field>
+
+              <Field label="Password">
+                <div className="flex h-12 items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-4 transition focus-within:border-red-900/35 focus-within:ring-4 focus-within:ring-red-900/10">
+                  <Lock className="h-4 w-4 text-red-900" />
+
+                  <Input
+                    required
+                    minLength={6}
+                    type={showPassword ? "text" : "password"}
+                    value={form.password}
+                    onChange={(e) =>
+                      setForm((s) => ({ ...s, password: e.target.value }))
+                    }
+                    placeholder="Minimum 6 characters"
+                    autoComplete="new-password"
+                    className="h-full border-0 bg-transparent px-0 text-sm font-semibold shadow-none outline-none focus-visible:ring-0"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((value) => !value)}
+                    className="text-neutral-400 transition hover:text-red-900"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </Field>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-2 inline-flex h-12 w-full items-center justify-center rounded-2xl bg-red-900 px-5 text-xs font-black uppercase tracking-[0.18em] text-white shadow-[0_16px_42px_rgba(127,29,29,0.24)] transition duration-300 hover:-translate-y-0.5 hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating
+                  </>
+                ) : (
+                  "Create Account"
+                )}
+              </button>
+            </form>
+
+            <p className="mt-6 text-center text-sm font-semibold text-neutral-500">
+              Already have an account?{" "}
+              <Link
+                href="/login"
+                className="font-black text-red-900 transition hover:text-red-700"
+              >
+                Login
+              </Link>
+            </p>
           </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="mx-auto mt-7 flex w-fit items-center justify-center rounded-full bg-red-700 px-7 py-3 text-xs font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_14px_35px_rgba(185,28,28,0.25)] transition hover:-translate-y-0.5 hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? "Creating..." : "Create Account"}
-          </button>
-
-          <p className="mt-6 text-center text-sm text-neutral-600">
-            Already have an account?{" "}
-            <Link href="/login" className="font-bold text-red-700 hover:text-red-800">
-              Login
-            </Link>
-          </p>
-        </form>
+        </div>
       </section>
     </main>
   );
@@ -138,7 +235,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-bold text-neutral-900">
+      <label className="mb-1.5 block text-xs font-black uppercase tracking-[0.16em] text-neutral-500">
         {label}
       </label>
       {children}

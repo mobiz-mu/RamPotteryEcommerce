@@ -3,14 +3,21 @@
 import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "ram-pottery-wishlist";
+const WISHLIST_UPDATED_EVENT = "ram-pottery-wishlist-updated";
+
+function notifyWishlistUpdated() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(WISHLIST_UPDATED_EVENT));
+}
 
 function readWishlist(): string[] {
   if (typeof window === "undefined") return [];
+
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as string[];
-    return Array.isArray(parsed) ? parsed : [];
+    const parsed = raw ? JSON.parse(raw) : [];
+
+    return Array.isArray(parsed) ? parsed.map(String) : [];
   } catch {
     return [];
   }
@@ -18,44 +25,87 @@ function readWishlist(): string[] {
 
 function writeWishlist(items: string[]) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  window.dispatchEvent(new Event("ram-pottery-wishlist-updated"));
+
+  const uniqueItems = Array.from(new Set(items.map(String)));
+
+  if (uniqueItems.length > 0) {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(uniqueItems));
+  } else {
+    window.localStorage.removeItem(STORAGE_KEY);
+  }
+
+  notifyWishlistUpdated();
 }
 
 export function useWishlist() {
   const [items, setItems] = useState<string[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     setItems(readWishlist());
+    setLoaded(true);
 
-    const sync = () => setItems(readWishlist());
-    window.addEventListener("storage", sync);
-    window.addEventListener("ram-pottery-wishlist-updated", sync);
+    function syncWishlist() {
+      setItems(readWishlist());
+    }
+
+    window.addEventListener("storage", syncWishlist);
+    window.addEventListener(WISHLIST_UPDATED_EVENT, syncWishlist);
 
     return () => {
-      window.removeEventListener("storage", sync);
-      window.removeEventListener("ram-pottery-wishlist-updated", sync);
+      window.removeEventListener("storage", syncWishlist);
+      window.removeEventListener(WISHLIST_UPDATED_EVENT, syncWishlist);
     };
   }, []);
 
-  function toggle(productId: string) {
+  function addItem(productId: string) {
     const current = readWishlist();
-    const exists = current.includes(productId);
-    const next = exists
-      ? current.filter((id) => id !== productId)
-      : [...current, productId];
+    const next = Array.from(new Set([...current, String(productId)]));
 
-    writeWishlist(next);
     setItems(next);
+    writeWishlist(next);
+  }
+
+  function removeItem(productId: string) {
+    const current = readWishlist();
+    const next = current.filter((id) => id !== String(productId));
+
+    setItems(next);
+    writeWishlist(next);
+  }
+
+  function toggleItem(productId: string) {
+    const current = readWishlist();
+
+    if (current.includes(String(productId))) {
+      removeItem(productId);
+      return;
+    }
+
+    addItem(productId);
+  }
+
+  function clearWishlist() {
+    setItems([]);
+    writeWishlist([]);
   }
 
   function isWishlisted(productId: string) {
-    return items.includes(productId);
+    return items.includes(String(productId));
   }
 
   return {
     items,
-    toggle,
+    loaded,
+
+    // New names used by the premium wishlist page
+    addItem,
+    removeItem,
+    toggleItem,
+    clearWishlist,
     isWishlisted,
+
+    // Backward-compatible name for existing ProductCard code
+    toggle: toggleItem,
   };
 }

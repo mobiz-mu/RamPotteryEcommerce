@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkoutSchema } from "@/lib/utils/validation";
+import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 type CheckoutBody = {
@@ -22,9 +23,23 @@ type CheckoutBody = {
   }>;
 };
 
-function createOrderNo() {
-  const random = Math.floor(1000 + Math.random() * 9000);
-  return `RP-${new Date().getFullYear()}-${random}`;
+async function createOrderNo() {
+  const year = new Date().getFullYear();
+
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const random = Math.floor(10000 + Math.random() * 90000);
+    const orderNo = `RP-${year}-${random}`;
+
+    const { data } = await supabaseAdmin
+      .from("orders")
+      .select("id")
+      .eq("order_number", orderNo)
+      .maybeSingle();
+
+    if (!data) return orderNo;
+  }
+
+  return `RP-${year}-${Date.now()}`;
 }
 
 export async function POST(req: Request) {
@@ -41,28 +56,34 @@ export async function POST(req: Request) {
     });
 
     if (!parsed.success) {
-      console.error("Checkout validation error:", parsed.error.flatten());
-
       return NextResponse.json(
         { error: "Invalid checkout details." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!Array.isArray(body.items) || body.items.length === 0) {
       return NextResponse.json(
         { error: "Your cart is empty." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     const cleanItems = body.items.map((item) => {
       const price = Number(item.price || 0);
-      const quantity = Number(item.quantity || 1);
+      const quantity = Math.max(Number(item.quantity || 1), 1);
 
       return {
         productId: item.productId || item.id || null,
         title: item.title || item.name || "Ram Pottery Product",
+        slug: item.slug || null,
+        image: item.image || null,
         price,
         quantity,
         lineTotal: price * quantity,
@@ -72,33 +93,33 @@ export async function POST(req: Request) {
     const subtotal = cleanItems.reduce((sum, item) => sum + item.lineTotal, 0);
     const deliveryFee = subtotal > 0 ? 200 : 0;
     const total = subtotal + deliveryFee;
-    const orderNo = createOrderNo();
+    const orderNo = await createOrderNo();
 
     const { data: order, error: orderError } = await supabaseAdmin
-        .from("orders")
-        .insert({
-         order_number: orderNo,
-         customer_name: parsed.data.customerName,
-         customer_phone: parsed.data.phone,
-         customer_email: parsed.data.email,
-         address: parsed.data.address,
-         area: parsed.data.area || null,
-         subtotal,
-         delivery_fee: deliveryFee,
-         total_amount: total,
-         status: "Pending",
-         whatsapp_sent: false,
-     })
-        .select("id")
-        .single();
-
+      .from("orders")
+      .insert({
+        user_id: user?.id || null,
+        order_number: orderNo,
+        customer_name: parsed.data.customerName,
+        customer_phone: parsed.data.phone,
+        customer_email: parsed.data.email,
+        address: parsed.data.address,
+        area: parsed.data.area || null,
+        note: parsed.data.note || null,
+        delivery_method: body.deliveryMethod || "Standard Delivery",
+        subtotal,
+        delivery_fee: deliveryFee,
+        total_amount: total,
+        status: "Pending",
+        whatsapp_sent: false,
+      })
+      .select("id, order_number")
+      .single();
 
     if (orderError || !order) {
-      console.error("Supabase order insert error:", orderError);
-
       return NextResponse.json(
         { error: orderError?.message || "Failed to save order." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -116,28 +137,27 @@ export async function POST(req: Request) {
       .insert(itemsPayload);
 
     if (itemsError) {
-      console.error("Supabase order_items insert error:", itemsError);
-
       return NextResponse.json(
         { error: itemsError.message || "Failed to save order items." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     return NextResponse.json({
       success: true,
+      orderId: order.id,
       orderNo,
       subtotal,
       deliveryFee,
       total,
       message: "Order created successfully.",
-   });
+    });
   } catch (error) {
     console.error("Checkout route fatal error:", error);
 
     return NextResponse.json(
       { error: "Something went wrong while creating the order." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
