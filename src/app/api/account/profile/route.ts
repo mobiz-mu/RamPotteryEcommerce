@@ -81,7 +81,11 @@ export async function PATCH(request: Request) {
 
     const payload = {
       user_id: user.id,
-      full_name: clean(body.full_name),
+      full_name:
+        clean(body.full_name) ||
+        user.user_metadata?.full_name ||
+        user.email ||
+        "Customer",
       email: user.email || clean(body.email),
       phone: clean(body.phone),
       shipping_full_name: clean(body.shipping_full_name),

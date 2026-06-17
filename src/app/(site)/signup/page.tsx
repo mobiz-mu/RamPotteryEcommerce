@@ -69,8 +69,7 @@ export default function SignupPage() {
       }
 
       toast.success("Account created successfully. Please login.");
-      router.replace("/login?created=1");
-      router.refresh();
+      window.location.href = "/login?created=1";
     } catch {
       toast.error("Something went wrong. Please try again.");
       setLoading(false);
