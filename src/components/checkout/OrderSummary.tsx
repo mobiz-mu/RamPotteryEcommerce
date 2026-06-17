@@ -5,6 +5,9 @@ import Link from "next/link";
 import { PackageCheck, ShoppingBag } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 
+const FREE_DELIVERY_MINIMUM = 3000;
+const STANDARD_DELIVERY_FEE = 150;
+
 function formatCurrency(value: number) {
   return `Rs ${value.toLocaleString("en-MU")}`;
 }
@@ -12,8 +15,16 @@ function formatCurrency(value: number) {
 export default function OrderSummary() {
   const { items, subtotal, loaded } = useCart();
 
-  const deliveryFee = items.length > 0 ? 200 : 0;
+  const deliveryFee =
+    items.length > 0 && subtotal > 0 && subtotal < FREE_DELIVERY_MINIMUM
+      ? STANDARD_DELIVERY_FEE
+      : 0;
+
   const total = subtotal + deliveryFee;
+  const amountLeftForFreeDelivery = Math.max(
+    FREE_DELIVERY_MINIMUM - subtotal,
+    0,
+  );
 
   if (!loaded) {
     return (
@@ -95,6 +106,25 @@ export default function OrderSummary() {
         )}
       </div>
 
+      {items.length > 0 ? (
+        <div className="mt-5 rounded-[22px] border border-red-900/10 bg-red-50 px-4 py-3">
+          {subtotal >= FREE_DELIVERY_MINIMUM ? (
+            <p className="text-sm font-bold leading-6 text-red-900">
+              You qualify for free delivery.
+            </p>
+          ) : (
+            <p className="text-sm font-bold leading-6 text-red-900">
+              Add {formatCurrency(amountLeftForFreeDelivery)} more to get free
+              delivery.
+            </p>
+          )}
+
+          <p className="mt-1 text-xs font-semibold leading-5 text-red-900/70">
+            Delivery is Rs 150 below Rs 3,000 and free from Rs 3,000.
+          </p>
+        </div>
+      ) : null}
+
       <div className="mt-5 space-y-3 rounded-[26px] border border-neutral-200 bg-[#faf8f4] p-4">
         <div className="flex items-center justify-between text-sm font-bold text-neutral-600">
           <span>Subtotal</span>
@@ -103,7 +133,13 @@ export default function OrderSummary() {
 
         <div className="flex items-center justify-between text-sm font-bold text-neutral-600">
           <span>Delivery</span>
-          <span>{items.length ? formatCurrency(deliveryFee) : "Rs 0"}</span>
+          <span>
+            {!items.length
+              ? "Rs 0"
+              : deliveryFee === 0
+                ? "Free"
+                : formatCurrency(deliveryFee)}
+          </span>
         </div>
 
         <div className="border-t border-neutral-200 pt-3">

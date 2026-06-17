@@ -9,6 +9,7 @@ import BlogRow from "@/components/home/BlogRow";
 import OurClients from "@/components/home/OurClients";
 import Newsletter from "@/components/home/Newsletter";
 import GoogleReviewsStrip from "@/components/home/GoogleReviewsStrip";
+import WhyChooseUs from "@/components/home/WhyChooseUs";
 
 const siteUrl = "https://rampottery.mu";
 
@@ -128,6 +129,7 @@ export default function HomePage() {
           <BlogRow />
           <GoogleReviewsStrip />
           <Newsletter />
+          <WhyChooseUs />
         </div>
       </main>
     </>

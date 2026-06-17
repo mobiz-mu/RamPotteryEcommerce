@@ -127,11 +127,12 @@ useEffect(() => {
             <Image
               src="/brand/logo.png"
               alt="Ram Pottery Mauritius"
-              width={155}
-              height={100}
+              width={210}
+              height={135}
               priority
-              className="block h-auto w-[112px] object-contain drop-shadow-sm sm:w-[118px] lg:w-[122px]"
-            />
+              sizes="(max-width: 640px) 132px, (max-width: 1024px) 142px, 152px"
+              className="block h-auto w-[132px] object-contain drop-shadow-sm transition duration-500 sm:w-[142px] lg:w-[152px]"
+           />
           </Link>
 
           <div className="flex h-full flex-1 items-center justify-end gap-4 lg:gap-5">
@@ -181,11 +182,12 @@ useEffect(() => {
               </button>
 
               <Image
-                src="/brand/logo.png"
-                alt="Ram Pottery"
-                width={135}
-                height={80}
-                className="h-auto w-[96px] object-contain"
+                 src="/brand/logo.png"
+                 alt="Ram Pottery"
+                 width={185}
+                 height={110}
+                 sizes="118px"
+                 className="h-auto w-[118px] object-contain"
               />
             </div>
 

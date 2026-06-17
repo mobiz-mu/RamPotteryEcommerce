@@ -2,7 +2,15 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Mail, MapPin, MessageCircle, Phone, Send, User } from "lucide-react";
+import {
+  Loader2,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Send,
+  User,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,11 +27,18 @@ import {
 
 type FormValues = z.infer<typeof checkoutSchema>;
 
+const FREE_DELIVERY_MINIMUM = 3000;
+const STANDARD_DELIVERY_FEE = 150;
+
 export default function CheckoutForm() {
   const router = useRouter();
   const { items, subtotal, clearCart, loaded } = useCart();
 
-  const deliveryFee = useMemo(() => (items.length ? 200 : 0), [items.length]);
+  const deliveryFee = useMemo(() => {
+    if (!items.length || subtotal <= 0) return 0;
+    return subtotal >= FREE_DELIVERY_MINIMUM ? 0 : STANDARD_DELIVERY_FEE;
+  }, [items.length, subtotal]);
+
   const total = subtotal + deliveryFee;
 
   const form = useForm<FormValues>({
@@ -106,8 +121,8 @@ export default function CheckoutForm() {
         </h2>
 
         <p className="mt-2 text-sm leading-7 text-neutral-600">
-          Add your details below. Your order will be saved, and WhatsApp will
-          open for fast confirmation with Ram Pottery.
+          Add your details below. Delivery is Rs 150 for orders below Rs 3,000
+          and free for orders from Rs 3,000.
         </p>
       </div>
 
@@ -227,7 +242,9 @@ function Field({
         {children}
       </div>
 
-      {error ? <p className="mt-1 text-sm font-semibold text-red-600">{error}</p> : null}
+      {error ? (
+        <p className="mt-1 text-sm font-semibold text-red-600">{error}</p>
+      ) : null}
     </div>
   );
 }
@@ -249,7 +266,9 @@ function TextField({
 
       {children}
 
-      {error ? <p className="mt-1 text-sm font-semibold text-red-600">{error}</p> : null}
+      {error ? (
+        <p className="mt-1 text-sm font-semibold text-red-600">{error}</p>
+      ) : null}
     </div>
   );
 }

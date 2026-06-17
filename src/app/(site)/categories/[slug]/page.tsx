@@ -5,6 +5,7 @@ import { ArrowRight, Filter, ShoppingBag, Sparkles } from "lucide-react";
 import { notFound } from "next/navigation";
 import CategorySidebarFilters from "@/components/categories/CategorySidebarFilters";
 import { createClient } from "@/lib/supabase/server";
+import { getProductTitleMeta } from "@/lib/product-title";
 
 const siteUrl = "https://rampottery.mu";
 const MIN_PRICE = 1;
@@ -367,6 +368,8 @@ function ProductTile({
   const imageAlt = getPrimaryAlt(product);
   const isOutOfStock =
     !product.is_in_stock || Number(product.stock_qty ?? 0) <= 0;
+  const { cleanTitle, sku } = getProductTitleMeta(product.title);
+  const displayTitle = cleanTitle || product.title;
 
   return (
     <Link
@@ -395,7 +398,12 @@ function ProductTile({
 
       <div className="p-3 sm:p-5">
         <h3 className="line-clamp-2 min-h-[40px] text-[13px] font-black leading-snug tracking-[-0.02em] text-neutral-950 transition group-hover:text-red-950 sm:text-base">
-          {product.title}
+          {displayTitle}
+          {sku ? (
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-red-900">
+              SKU: {sku}
+            </p>
+           ) : null}
         </h3>
 
         {product.short_description ? (

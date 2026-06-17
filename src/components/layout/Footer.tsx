@@ -1,18 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Mail, MapPin, Phone } from "lucide-react";
 import { SITE_CONFIG } from "@/lib/constants/site";
 import { categories } from "@/data/mock";
 
 const socialLinks = [
   {
-    name: "Instagram",
-    href: "https://instagram.com/",
-    icon: "/icons/instagram.png",
-  },
-  {
     name: "Facebook",
     href: "https://facebook.com/",
     icon: "/icons/facebook.png",
+  },
+  {
+    name: "Instagram",
+    href: "https://instagram.com/",
+    icon: "/icons/instagram.png",
   },
   {
     name: "TikTok",
@@ -26,53 +27,71 @@ const socialLinks = [
   },
 ];
 
+const quickLinks = [
+  { name: "Search", href: "/shop" },
+  { name: "Shipping & Returns", href: "/shipping-returns" },
+  { name: "Privacy Policy", href: "/privacy-policy" },
+  { name: "Terms & Conditions", href: "/terms" },
+];
+
+const companyLinks = [
+  { name: "About Us", href: "/about" },
+  { name: "Blogs", href: "/blogs" },
+  { name: "Workshop", href: "/workshop" },
+  { name: "Contact Us", href: "/contact" },
+];
+
 export default function Footer() {
   return (
-    <footer className="border-t border-neutral-200 bg-white">
-      <div className="container-padded py-12 sm:py-14 lg:py-16">
-        <div className="grid gap-10 sm:gap-12 md:grid-cols-2 xl:grid-cols-[1.15fr_0.9fr_0.9fr_0.95fr]">
+    <footer className="relative overflow-hidden bg-[linear-gradient(135deg,#2b0909_0%,#4a0f0f_45%,#120505_100%)] text-white">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(255,255,255,0.08),transparent_26%),radial-gradient(circle_at_85%_20%,rgba(255,255,255,0.06),transparent_24%)]" />
+
+      <div className="relative container-padded py-9 sm:py-10 lg:py-12">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.2fr_0.85fr_0.85fr_1.15fr] lg:gap-10">
           <div>
-            <div className="max-w-md">
-              <h3 className="text-2xl font-semibold tracking-tight text-neutral-950">
-                Ram Pottery
-              </h3>
+            <h3 className="text-2xl font-semibold tracking-[-0.04em] text-white">
+              Ram Pottery
+            </h3>
 
-              <p className="mt-4 text-sm leading-7 text-neutral-600 sm:text-[15px]">
-                Premium handcrafted pottery, clay décor, pooja items, tableware,
-                vases, cookingware, and terracotta creations in Mauritius —
-                made with tradition, elegance, and timeless artisanal beauty.
-              </p>
-            </div>
+            <p className="mt-3 max-w-md text-sm leading-7 text-white/70">
+              Premium handcrafted pottery, clay décor, pooja items, tableware,
+              vases, cookingware and terracotta creations in Mauritius.
+            </p>
 
-            <div className="mt-6 space-y-2 text-sm leading-7 text-neutral-600">
-              <p>{SITE_CONFIG.address}</p>
-              <p>
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              {socialLinks.map((social) => (
                 <Link
-                  href={`tel:${SITE_CONFIG.phone}`}
-                  className="transition hover:text-red-600"
+                  key={social.name}
+                  href={social.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={social.name}
+                  title={social.name}
+                  className="group flex h-12 w-12 items-center justify-center rounded-full border border-white bg-white p-2 shadow-[0_12px_30px_rgba(0,0,0,0.25)] transition duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-red-50"
                 >
-                  {SITE_CONFIG.phone}
+                  <Image
+                    src={social.icon}
+                    alt={social.name}
+                    width={32}
+                    height={32}
+                    className="h-7 w-7 object-contain transition duration-300 group-hover:scale-110"
+                  />
                 </Link>
-              </p>
-              <p>
-                <Link
-                  href={`mailto:${SITE_CONFIG.email}`}
-                  className="transition hover:text-red-600"
-                >
-                  {SITE_CONFIG.email}
-                </Link>
-              </p>
+              ))}
             </div>
           </div>
 
           <div>
-            <h4 className="text-base font-semibold text-neutral-950">Categories</h4>
-            <div className="mt-5 space-y-3 text-sm text-neutral-600">
+            <h4 className="text-sm font-semibold uppercase tracking-[0.16em] text-red-100">
+              Collections
+            </h4>
+
+            <div className="mt-4 space-y-2.5 text-sm text-white/70">
               {categories.slice(0, 7).map((category) => (
                 <Link
                   key={category.id}
                   href={`/categories/${category.slug}`}
-                  className="block transition duration-200 hover:translate-x-1 hover:text-red-600"
+                  className="block transition duration-200 hover:translate-x-1 hover:text-red-100"
                 >
                   {category.name}
                 </Link>
@@ -81,117 +100,91 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="text-base font-semibold text-neutral-950">Company</h4>
+            <h4 className="text-sm font-semibold uppercase tracking-[0.16em] text-red-100">
+              Quick Links
+            </h4>
 
-            <div className="mt-5 space-y-3 text-sm text-neutral-600">
-              <Link
-                href="/about"
-                className="block transition duration-200 hover:translate-x-1 hover:text-red-600"
-              >
-                About Us
-              </Link>
-              <Link
-                href="/blogs"
-                className="block transition duration-200 hover:translate-x-1 hover:text-red-600"
-              >
-                Blogs
-              </Link>
-              <Link
-                href="/workshop"
-                className="block transition duration-200 hover:translate-x-1 hover:text-red-600"
-              >
-                Workshop
-              </Link>
-              <Link
-                href="/contact"
-                className="block transition duration-200 hover:translate-x-1 hover:text-red-600"
-              >
-                Contact Us
-              </Link>
+            <div className="mt-4 space-y-2.5 text-sm text-white/70">
+              {quickLinks.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="block transition duration-200 hover:translate-x-1 hover:text-red-100"
+                >
+                  {item.name}
+                </Link>
+              ))}
             </div>
 
-            <div className="mt-6">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-neutral-500">
-                Follow Us
-              </p>
+            <h4 className="mt-7 text-sm font-semibold uppercase tracking-[0.16em] text-red-100">
+              Company
+            </h4>
 
-              <div className="flex flex-wrap items-center gap-3">
-                {socialLinks.map((social) => (
-                  <Link
-                    key={social.name}
-                    href={social.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={social.name}
-                    className="group flex h-11 w-11 items-center justify-center rounded-full border border-neutral-200 bg-transparent transition duration-300 hover:-translate-y-1 hover:border-red-200 hover:bg-red-50"
-                  >
-                    <Image
-                      src={social.icon}
-                      alt={social.name}
-                      width={20}
-                      height={20}
-                      className="h-5 w-5 object-contain transition duration-300 group-hover:scale-110"
-                    />
-                  </Link>
-                ))}
-              </div>
+            <div className="mt-4 space-y-2.5 text-sm text-white/70">
+              {companyLinks.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="block transition duration-200 hover:translate-x-1 hover:text-red-100"
+                >
+                  {item.name}
+                </Link>
+              ))}
             </div>
           </div>
 
           <div>
-            <h4 className="text-base font-semibold text-neutral-950">Customer Help</h4>
-            <div className="mt-5 space-y-3 text-sm text-neutral-600">
+            <h4 className="text-sm font-semibold uppercase tracking-[0.16em] text-red-100">
+              Contact
+            </h4>
+
+            <div className="mt-4 space-y-4 text-sm leading-7 text-white/70">
+              <p className="flex gap-3">
+                <MapPin className="mt-1 h-4 w-4 shrink-0 text-red-100" />
+                <span>{SITE_CONFIG.address}</span>
+              </p>
+
               <Link
-                href="/shipping-returns"
-                className="block transition duration-200 hover:translate-x-1 hover:text-red-600"
+                href={`tel:${SITE_CONFIG.phone}`}
+                className="flex items-center gap-3 transition hover:text-red-100"
               >
-                Shipping & Returns
+                <Phone className="h-4 w-4 shrink-0 text-red-100" />
+                <span>{SITE_CONFIG.phone}</span>
               </Link>
+
               <Link
-                href="/privacy-policy"
-                className="block transition duration-200 hover:translate-x-1 hover:text-red-600"
+                href={`mailto:${SITE_CONFIG.email}`}
+                className="flex items-center gap-3 transition hover:text-red-100"
               >
-                Privacy Policy
-              </Link>
-              <Link
-                href="/terms"
-                className="block transition duration-200 hover:translate-x-1 hover:text-red-600"
-              >
-                Terms & Conditions
+                <Mail className="h-4 w-4 shrink-0 text-red-100" />
+                <span>{SITE_CONFIG.email}</span>
               </Link>
             </div>
 
-            <div className="mt-8">
-              <Link
-                href="https://g.page/"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-block transition duration-300 hover:-translate-y-1"
-              >
-                <Image
-                  src="/icons/googlereviews-badge.png"
-                  alt="Google Reviews"
-                  width={170}
-                  height={70}
-                  className="h-[100px] w-auto object-contain sm:h-[120px]"
-                />
-              </Link>
+            <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.06] p-4 shadow-[0_14px_34px_rgba(0,0,0,0.12)]">
+              <p className="text-sm font-semibold text-white">
+                Handmade with care.
+              </p>
+              <p className="mt-2 text-sm leading-6 text-white/65">
+                Every Ram Pottery piece is crafted with tradition, elegance and
+                timeless artisanal beauty.
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-red-600">
-        <div className="container-padded flex flex-col items-center justify-between gap-3 py-4 text-center text-sm text-white md:flex-row">
+      <div className="relative border-t border-white/10 bg-black/15">
+        <div className="container-padded flex flex-col items-center justify-between gap-3 py-4 text-center text-xs text-white/65 sm:text-sm md:flex-row">
           <p>© {new Date().getFullYear()} Ram Pottery. All rights reserved.</p>
 
           <p className="flex flex-wrap items-center justify-center gap-1">
-            <span>Built by</span>
+            <span>Designed and developed by</span>
             <Link
               href="https://mobiz.mu"
               target="_blank"
               rel="noreferrer"
-              className="font-semibold text-white underline underline-offset-4 transition hover:text-white/80"
+              className="font-semibold text-white underline underline-offset-4 transition hover:text-red-100"
             >
               Mobiz.mu
             </Link>

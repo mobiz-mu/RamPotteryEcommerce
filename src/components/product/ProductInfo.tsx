@@ -1,17 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { getProductTitleMeta } from "@/lib/product-title";
 import {
   Check,
   Heart,
   MessageCircle,
   Minus,
-  PackageCheck,
   Plus,
-  ShieldCheck,
   ShoppingBag,
-  Sparkles,
-  Truck,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -157,12 +154,10 @@ export default function ProductInfo({ product }: Props) {
   const price = Number(product.price ?? 0);
   const compareAtPrice = Number(product.compare_at_price ?? 0);
   const hasComparePrice = compareAtPrice > price && price > 0;
-
-  const isOutOfStock =
-    !product.is_in_stock || Number(product.stock_qty ?? 0) <= 0;
-
-  const stockQty = Number(product.stock_qty ?? 0);
+  const isOutOfStock = !product.is_in_stock;
   const productImage = getPrimaryImage(product);
+  const { cleanTitle, sku } = getProductTitleMeta(product.title);
+  const displayTitle = cleanTitle || product.title;
 
   useEffect(() => {
     setMounted(true);
@@ -184,7 +179,7 @@ export default function ProductInfo({ product }: Props) {
 
   const whatsappUrl = useMemo(() => {
     return buildWhatsAppLink({
-      productTitle: product.title,
+      productTitle: displayTitle,
       quantity: qty,
       price,
       productUrl,
@@ -202,37 +197,34 @@ export default function ProductInfo({ product }: Props) {
   function handleAddToCart() {
     try {
       if (isOutOfStock) {
-        toast.error("This product is currently out of stock.");
+        toast.error("This product is currently unavailable.");
         return;
       }
 
       const existing = readCart();
       const existingIndex = existing.findIndex((item) => item.id === product.id);
 
-      let next: CartItem[];
-
-      if (existingIndex >= 0) {
-        next = existing.map((item) =>
-          item.id === product.id
-            ? {
-                ...item,
-                quantity: Number(item.quantity || 0) + qty,
-              }
-            : item,
-        );
-      } else {
-        next = [
-          ...existing,
-          {
-            id: product.id,
-            title: product.title,
-            slug: product.slug,
-            image: productImage,
-            price,
-            quantity: qty,
-          },
-        ];
-      }
+      const next =
+        existingIndex >= 0
+          ? existing.map((item) =>
+              item.id === product.id
+                ? {
+                    ...item,
+                    quantity: Number(item.quantity || 0) + qty,
+                  }
+                : item,
+            )
+          : [
+              ...existing,
+              {
+                id: product.id,
+                title: displayTitle,
+                slug: product.slug,
+                image: productImage,
+                price,
+                quantity: qty,
+              },
+            ];
 
       writeCart(next);
 
@@ -268,75 +260,51 @@ export default function ProductInfo({ product }: Props) {
   }
 
   return (
-    <div className="rounded-[34px] border border-neutral-200 bg-white p-5 shadow-[0_18px_70px_rgba(15,10,5,0.07)] sm:p-7">
-      <div className="mb-5 flex flex-wrap items-center gap-2">
-        <span className="inline-flex items-center gap-2 rounded-full border border-red-900/10 bg-red-50 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-red-900">
-          <Sparkles className="h-3.5 w-3.5" />
-          {product.badge || "Handmade Selection"}
-        </span>
+    <div>
+      {product.categories?.name ? (
+        <Link
+          href={`/categories/${product.categories.slug}`}
+          className="mb-5 inline-flex rounded-full border border-red-950/10 bg-[#fff8f1] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-red-900 transition hover:border-red-900/25 hover:bg-red-50"
+        >
+          {product.categories.name}
+        </Link>
+      ) : null}
 
-        {product.categories?.name ? (
-          <Link
-            href={`/categories/${product.categories.slug}`}
-            className="inline-flex rounded-full border border-neutral-200 bg-white px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-neutral-500 transition hover:border-red-900/20 hover:bg-red-50 hover:text-red-900"
-          >
-            {product.categories.name}
-          </Link>
-        ) : null}
-      </div>
-
-      <h1 className="text-3xl font-black leading-tight tracking-[-0.05em] text-neutral-950 sm:text-4xl lg:text-5xl">
-        {product.title}
+      <h1 className="text-balance text-3xl font-semibold leading-tight tracking-[-0.05em] text-neutral-950 sm:text-4xl lg:text-5xl">
+         {displayTitle}
       </h1>
 
+     {sku ? (
+        <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-red-900">
+          SKU: {sku}
+        </p>
+     ) : null}
+
       {product.short_description ? (
-        <p className="mt-4 text-sm leading-7 text-neutral-600 sm:text-base">
+        <p className="mt-4 text-sm leading-7 text-neutral-600 sm:text-[15px]">
           {product.short_description}
         </p>
       ) : null}
 
       <div className="mt-6 flex flex-wrap items-end gap-3">
-        <p className="text-3xl font-black tracking-[-0.05em] text-red-950 sm:text-4xl">
+        <p className="text-3xl font-semibold tracking-[-0.04em] text-red-950 sm:text-4xl">
           {formatCurrency(price)}
         </p>
 
         {hasComparePrice ? (
-          <p className="pb-1 text-lg font-semibold text-neutral-400 line-through">
+          <p className="pb-1 text-base font-medium text-neutral-400 line-through">
             {formatCurrency(compareAtPrice)}
           </p>
         ) : null}
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center gap-3">
-        <span
-          className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.14em] ${
-            isOutOfStock
-              ? "bg-neutral-100 text-neutral-500"
-              : "bg-emerald-50 text-emerald-700"
-          }`}
-        >
-          <span
-            className={`h-2 w-2 rounded-full ${
-              isOutOfStock ? "bg-neutral-400" : "bg-emerald-500"
-            }`}
-          />
-          {isOutOfStock ? "Out of stock" : "In stock"}
-        </span>
-
-        {!isOutOfStock && stockQty > 0 ? (
-          <span className="inline-flex rounded-full border border-neutral-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-neutral-500">
-            {stockQty.toLocaleString("en-MU")} available
-          </span>
-        ) : null}
-      </div>
-
-      <div className="mt-8 rounded-[28px] border border-neutral-200 bg-[#faf8f4] p-4 sm:p-5">
-        <p className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-neutral-400">
+      <div className="mt-7 rounded-[26px] border border-red-950/10 bg-[#fffaf4] p-4 sm:p-5">
+        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-neutral-400">
           Quantity
         </p>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="grid h-12 w-full grid-cols-[48px_1fr_48px] overflow-hidden rounded-2xl border border-neutral-200 bg-white sm:w-[170px]">
+        <div className="grid gap-3 sm:grid-cols-[150px_1fr]">
+          <div className="grid h-12 grid-cols-[48px_1fr_48px] overflow-hidden rounded-full border border-red-950/10 bg-white">
             <button
               type="button"
               onClick={decreaseQty}
@@ -346,7 +314,7 @@ export default function ProductInfo({ product }: Props) {
               <Minus className="h-4 w-4" />
             </button>
 
-            <div className="flex items-center justify-center border-x border-neutral-100 text-sm font-black text-neutral-950">
+            <div className="flex items-center justify-center border-x border-red-950/10 text-sm font-semibold text-neutral-950">
               {qty}
             </div>
 
@@ -364,7 +332,7 @@ export default function ProductInfo({ product }: Props) {
             type="button"
             onClick={handleAddToCart}
             disabled={isOutOfStock}
-            className={`inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl px-6 text-xs font-black uppercase tracking-[0.16em] shadow-[0_14px_34px_rgba(127,29,29,0.22)] transition duration-300 sm:flex-1 ${
+            className={`inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-xs font-semibold uppercase tracking-[0.16em] shadow-[0_14px_34px_rgba(127,29,29,0.22)] transition duration-300 ${
               added
                 ? "bg-green-600 text-white"
                 : "bg-red-900 text-white hover:-translate-y-0.5 hover:bg-red-800"
@@ -375,17 +343,17 @@ export default function ProductInfo({ product }: Props) {
             ) : (
               <ShoppingBag className="h-4 w-4" />
             )}
-            {added ? "Added" : "Add to Cart"}
+            {added ? "Added" : isOutOfStock ? "Unavailable" : "Add to Cart"}
           </button>
         </div>
 
-        <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
+        <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_150px]">
           <a
             href={mounted && !isOutOfStock ? whatsappUrl : "#"}
             target="_blank"
             rel="noreferrer"
             aria-disabled={!mounted || isOutOfStock}
-            className={`inline-flex h-12 items-center justify-center gap-2 rounded-2xl px-6 text-xs font-black uppercase tracking-[0.16em] transition duration-300 ${
+            className={`inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-xs font-semibold uppercase tracking-[0.14em] transition duration-300 ${
               isOutOfStock
                 ? "pointer-events-none bg-neutral-200 text-neutral-400"
                 : "bg-neutral-950 text-white shadow-[0_14px_34px_rgba(15,10,5,0.18)] hover:-translate-y-0.5 hover:bg-red-950"
@@ -398,10 +366,10 @@ export default function ProductInfo({ product }: Props) {
           <button
             type="button"
             onClick={handleWishlist}
-            className={`inline-flex h-12 items-center justify-center gap-2 rounded-2xl border px-6 text-xs font-black uppercase tracking-[0.16em] transition duration-300 hover:-translate-y-0.5 ${
+            className={`inline-flex h-12 items-center justify-center gap-2 rounded-full border px-5 text-xs font-semibold uppercase tracking-[0.14em] transition duration-300 hover:-translate-y-0.5 ${
               wishlisted
                 ? "border-red-900 bg-red-50 text-red-900"
-                : "border-neutral-200 bg-white text-red-900 hover:border-red-900/20 hover:bg-red-50"
+                : "border-red-950/10 bg-white text-red-900 hover:border-red-900/20 hover:bg-red-50"
             }`}
           >
             <Heart className={`h-4 w-4 ${wishlisted ? "fill-current" : ""}`} />
@@ -409,59 +377,6 @@ export default function ProductInfo({ product }: Props) {
           </button>
         </div>
       </div>
-
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        <TrustCard
-          icon={<ShieldCheck className="h-5 w-5" />}
-          title="Secure"
-          desc="Safe checkout flow"
-        />
-        <TrustCard
-          icon={<PackageCheck className="h-5 w-5" />}
-          title="Prepared"
-          desc="Packed with care"
-        />
-        <TrustCard
-          icon={<Truck className="h-5 w-5" />}
-          title="Delivery"
-          desc="Mauritius follow-up"
-        />
-      </div>
-
-      {product.description ? (
-        <div className="mt-8 border-t border-neutral-200 pt-7">
-          <h2 className="text-2xl font-black tracking-[-0.04em] text-neutral-950">
-            Product Details
-          </h2>
-
-          <div className="mt-4 whitespace-pre-line text-sm leading-7 text-neutral-600 sm:text-base">
-            {product.description}
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function TrustCard({
-  icon,
-  title,
-  desc,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  desc: string;
-}) {
-  return (
-    <div className="rounded-[22px] border border-neutral-200 bg-white p-4 shadow-sm">
-      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-red-50 text-red-900">
-        {icon}
-      </div>
-
-      <h3 className="text-sm font-black text-neutral-950">{title}</h3>
-      <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">
-        {desc}
-      </p>
     </div>
   );
 }

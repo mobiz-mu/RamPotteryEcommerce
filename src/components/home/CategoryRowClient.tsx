@@ -67,11 +67,9 @@ function getPrimaryImage(product: Product) {
 
 function ProductCard({
   product,
-  priority = false,
   onAddToCart,
 }: {
   product: Product;
-  priority?: boolean;
   onAddToCart: (item: CartDrawerItem) => void;
 }) {
   const [quantity, setQuantity] = useState(1);
@@ -100,18 +98,16 @@ function ProductCard({
 
     const found = existing.find((cartItem: any) => cartItem.id === product.id);
 
-    let next;
-    if (found) {
-      next = existing.map((cartItem: any) =>
-        cartItem.id === product.id
-          ? { ...cartItem, quantity: cartItem.quantity + quantity }
-          : cartItem
-      );
-    } else {
-      next = [...existing, item];
-    }
+    const next = found
+      ? existing.map((cartItem: any) =>
+          cartItem.id === product.id
+            ? { ...cartItem, quantity: cartItem.quantity + quantity }
+            : cartItem,
+        )
+      : [...existing, item];
 
     localStorage.setItem(key, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent("ram-pottery-cart-updated"));
     onAddToCart(item);
   }
 
@@ -119,7 +115,7 @@ function ProductCard({
     <div className="group block">
       <Link href={`/products/${product.slug}`}>
         <div className="overflow-hidden rounded-[1.75rem] border border-[#eee5e1] bg-white shadow-[0_10px_32px_rgba(0,0,0,0.045)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_48px_rgba(0,0,0,0.08)]">
-          <div className="relative aspect-[1/1] overflow-hidden bg-[#fbf8f7]">
+          <div className="relative aspect-square overflow-hidden bg-[#fbf8f7]">
             {isOutOfStock ? (
               <div className="absolute left-4 top-4 z-10 rounded-full bg-white px-3 py-1.5 text-[12px] font-medium text-neutral-950 shadow-sm">
                 Out of stock
@@ -130,7 +126,7 @@ function ProductCard({
               src={imageUrl}
               alt={product.title}
               fill
-              priority={priority}
+              loading="lazy"
               sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
               className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
             />
@@ -149,16 +145,21 @@ function ProductCard({
           {[1, 2, 3, 4].map((star) => (
             <Star key={star} className="h-4 w-4 fill-current" />
           ))}
+
           <div className="relative">
             <Star className="h-4 w-4 text-[#b91c1c]" />
             {rating === 4.5 ? (
-              <div className="absolute inset-y-0 left-0 overflow-hidden" style={{ width: "50%" }}>
+              <div
+                className="absolute inset-y-0 left-0 overflow-hidden"
+                style={{ width: "50%" }}
+              >
                 <Star className="h-4 w-4 fill-current text-[#b91c1c]" />
               </div>
             ) : (
               <Star className="absolute inset-0 h-4 w-4 fill-current text-[#b91c1c]" />
             )}
           </div>
+
           <span className="ml-1 text-[13px] font-medium text-neutral-600">
             {rating.toFixed(1)}
           </span>
@@ -185,16 +186,20 @@ function ProductCard({
               type="button"
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
               className="h-9 w-9 text-sm text-neutral-700 transition hover:bg-[#faf4f2]"
+              aria-label="Decrease quantity"
             >
               −
             </button>
+
             <div className="flex h-9 min-w-[34px] items-center justify-center text-sm font-medium text-neutral-900">
               {quantity}
             </div>
+
             <button
               type="button"
               onClick={() => setQuantity(quantity + 1)}
               className="h-9 w-9 text-sm text-neutral-700 transition hover:bg-[#faf4f2]"
+              aria-label="Increase quantity"
             >
               +
             </button>
@@ -220,18 +225,18 @@ export default function CategoryRowClient({ rows = [] }: Props) {
   const [lastAdded, setLastAdded] = useState<CartDrawerItem | null>(null);
   const [cartItems, setCartItems] = useState<any[]>([]);
 
-useEffect(() => {
-  try {
-    setCartItems(JSON.parse(localStorage.getItem("ram-pottery-cart") || "[]"));
-  } catch {
-    setCartItems([]);
-  }
-}, [drawerOpen]);
-  
+  useEffect(() => {
+    try {
+      setCartItems(JSON.parse(localStorage.getItem("ram-pottery-cart") || "[]"));
+    } catch {
+      setCartItems([]);
+    }
+  }, [drawerOpen]);
 
   const cartTotal = cartItems.reduce(
-    (sum: number, item: any) => sum + Number(item.price ?? 0) * Number(item.quantity ?? 0),
-    0
+    (sum: number, item: any) =>
+      sum + Number(item.price ?? 0) * Number(item.quantity ?? 0),
+    0,
   );
 
   function handleAddToCart(item: CartDrawerItem) {
@@ -243,7 +248,7 @@ useEffect(() => {
     <>
       <section className="section-space bg-white">
         <div className="container-padded space-y-14 sm:space-y-16">
-          {rows.map(({ category, products }, rowIndex) => (
+          {rows.map(({ category, products }) => (
             <div key={category.id} className="space-y-6">
               <div className="flex items-center justify-between gap-4">
                 <Link
@@ -256,6 +261,7 @@ useEffect(() => {
                   >
                     {category.name}
                   </h2>
+
                   <ArrowRight className="h-6 w-6 text-[#7f1d1d] transition-transform duration-300 group-hover:translate-x-1" />
                 </Link>
 
@@ -268,11 +274,10 @@ useEffect(() => {
               </div>
 
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-                {products.map((product, productIndex) => (
+                {products.map((product) => (
                   <ProductCard
                     key={product.id}
                     product={product}
-                    priority={rowIndex === 0 && productIndex < 4}
                     onAddToCart={handleAddToCart}
                   />
                 ))}
@@ -290,10 +295,12 @@ useEffect(() => {
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-5">
             <h3 className="text-xl font-semibold text-neutral-950">Cart</h3>
+
             <button
               type="button"
               onClick={() => setDrawerOpen(false)}
               className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 text-neutral-700 transition hover:bg-neutral-50"
+              aria-label="Close cart drawer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -302,7 +309,8 @@ useEffect(() => {
           <div className="flex-1 overflow-y-auto px-6 py-5">
             {lastAdded ? (
               <div className="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                Added <span className="font-medium">{lastAdded.title}</span> to cart.
+                Added <span className="font-medium">{lastAdded.title}</span> to
+                cart.
               </div>
             ) : null}
 
@@ -311,22 +319,30 @@ useEffect(() => {
             ) : (
               <div className="space-y-4">
                 {cartItems.map((item: any) => (
-                  <div key={item.id} className="flex gap-4 rounded-2xl border border-neutral-200 p-4">
+                  <div
+                    key={item.id}
+                    className="flex gap-4 rounded-2xl border border-neutral-200 p-4"
+                  >
                     <div className="relative h-20 w-20 overflow-hidden rounded-xl bg-neutral-100">
                       <Image
                         src={item.image || "/images/placeholder-product.jpg"}
                         alt={item.title}
                         fill
+                        loading="lazy"
                         sizes="80px"
                         className="object-cover"
                       />
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="font-medium text-neutral-950">{item.title}</div>
+                      <div className="font-medium text-neutral-950">
+                        {item.title}
+                      </div>
+
                       <div className="mt-1 text-sm text-neutral-500">
                         Qty: {item.quantity}
                       </div>
+
                       <div className="mt-2 text-sm font-semibold text-neutral-900">
                         {formatCurrency(item.price)}
                       </div>

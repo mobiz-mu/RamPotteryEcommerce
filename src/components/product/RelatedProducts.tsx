@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { getProductTitleMeta } from "@/lib/product-title";
 
 type ProductImage = {
   image_url: string | null;
@@ -60,6 +61,8 @@ export default function RelatedProducts({ categoryName, products }: Props) {
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {products.map((product) => {
+            const { cleanTitle, sku } = getProductTitleMeta(product.title);
+            const displayTitle = cleanTitle || product.title;
             const imageUrl = getPrimaryImage(product);
             const isOutOfStock =
               !product.is_in_stock || Number(product.stock_qty ?? 0) <= 0;
@@ -79,7 +82,7 @@ export default function RelatedProducts({ categoryName, products }: Props) {
 
                   <Image
                     src={imageUrl}
-                    alt={product.title}
+                    alt={displayTitle}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
@@ -88,7 +91,12 @@ export default function RelatedProducts({ categoryName, products }: Props) {
 
                 <div className="p-5">
                   <h3 className="text-lg font-medium tracking-[-0.02em] text-neutral-950 transition-colors duration-300 group-hover:text-red-600">
-                    {product.title}
+                    {displayTitle}
+                    {sku ? (
+                       <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-red-900">
+                         SKU: {sku}
+                       </p>
+                     ) : null}
                   </h3>
 
                   <div className="mt-3 flex items-center gap-3">

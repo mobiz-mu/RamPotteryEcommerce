@@ -145,7 +145,7 @@ function ProductTile({
   return (
     <article className="group relative overflow-hidden rounded-[20px] border border-neutral-200/90 bg-white shadow-[0_10px_28px_rgba(15,10,5,0.055)] transition duration-500 hover:-translate-y-1 hover:border-red-900/20 hover:shadow-[0_22px_70px_rgba(80,0,0,0.12)] sm:rounded-[26px]">
       <div className="relative aspect-square overflow-hidden bg-[#faf4ec]">
-        <Link href={href} aria-label={`View ${title}`} className="block h-full">
+        <Link href={href} aria-label={`View ${title}`} className="relative block h-full w-full">
           <Image
             src={image}
             alt={alt}

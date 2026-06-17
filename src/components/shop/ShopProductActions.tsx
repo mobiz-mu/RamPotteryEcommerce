@@ -2,6 +2,7 @@
 
 import { Minus, Plus, ShoppingCart } from "lucide-react";
 import { useState } from "react";
+import { getProductTitleMeta } from "@/lib/product-title";
 
 type ShopProductActionsProps = {
   product: {
@@ -20,13 +21,19 @@ type CartItem = {
   price: number;
   image: string;
   quantity: number;
+  sku?: string;
 };
 
 const CART_KEY = "ram-pottery-cart";
 
-export default function ShopProductActions({ product }: ShopProductActionsProps) {
+export default function ShopProductActions({
+  product,
+}: ShopProductActionsProps) {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+
+  const { cleanTitle, sku } = getProductTitleMeta(product.title);
+  const displayTitle = cleanTitle || product.title;
 
   function decreaseQuantity() {
     setQuantity((current) => Math.max(current - 1, 1));
@@ -50,8 +57,13 @@ export default function ShopProductActions({ product }: ShopProductActionsProps)
         };
       } else {
         existing.push({
-          ...product,
+          id: product.id,
+          slug: product.slug,
+          title: displayTitle,
+          price: product.price,
+          image: product.image,
           quantity,
+          sku: sku || undefined,
         });
       }
 
@@ -100,7 +112,7 @@ export default function ShopProductActions({ product }: ShopProductActionsProps)
         className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white shadow-[0_12px_26px_rgba(127,29,29,0.22)] transition duration-300 hover:-translate-y-0.5 ${
           added ? "bg-green-600" : "bg-red-900 hover:bg-red-800"
         }`}
-        aria-label={`Add ${product.title} to cart`}
+        aria-label={`Add ${displayTitle} to cart`}
         title={added ? "Added" : "Add to cart"}
       >
         <ShoppingCart className="h-4 w-4" />

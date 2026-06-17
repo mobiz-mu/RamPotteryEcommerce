@@ -3,6 +3,9 @@ import { checkoutSchema } from "@/lib/utils/validation";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
+const FREE_DELIVERY_MINIMUM = 3000;
+const STANDARD_DELIVERY_FEE = 150;
+
 type CheckoutBody = {
   customerName: string;
   phone: string;
@@ -91,7 +94,12 @@ export async function POST(req: Request) {
     });
 
     const subtotal = cleanItems.reduce((sum, item) => sum + item.lineTotal, 0);
-    const deliveryFee = subtotal > 0 ? 200 : 0;
+
+    const deliveryFee =
+      subtotal > 0 && subtotal < FREE_DELIVERY_MINIMUM
+        ? STANDARD_DELIVERY_FEE
+        : 0;
+
     const total = subtotal + deliveryFee;
     const orderNo = await createOrderNo();
 

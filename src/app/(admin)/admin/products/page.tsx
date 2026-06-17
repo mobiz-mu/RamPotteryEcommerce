@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getProductTitleMeta } from "@/lib/product-title";
 
 function formatCurrency(value: number | null) {
   return `Rs ${Number(value ?? 0).toLocaleString("en-MU")}`;
@@ -33,9 +34,11 @@ export default async function AdminProductsPage() {
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-red-600">
             Catalog
           </p>
+
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-950">
             Products
           </h1>
+
           <p className="mt-3 text-sm leading-7 text-neutral-500">
             Manage your premium product catalog, pricing, SEO, stock, and images.
           </p>
@@ -70,56 +73,85 @@ export default async function AdminProductsPage() {
                 <th className="px-3 py-3 font-medium">Action</th>
               </tr>
             </thead>
+
             <tbody>
               {!products || products.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-3 py-10 text-center text-neutral-500">
+                  <td
+                    colSpan={8}
+                    className="px-3 py-10 text-center text-neutral-500"
+                  >
                     No products found.
                   </td>
                 </tr>
               ) : (
-                products.map((product: any) => (
-                  <tr key={product.id} className="border-b border-neutral-100">
-                    <td className="px-3 py-4">
-                      <div className="font-medium text-neutral-950">{product.title}</div>
-                      <div className="mt-1 text-xs text-neutral-500">{product.slug}</div>
-                    </td>
-                    <td className="px-3 py-4 text-neutral-600">
-                      {product.categories?.name ?? "-"}
-                    </td>
-                    <td className="px-3 py-4 text-neutral-600">
-                      {formatCurrency(product.price)}
-                    </td>
-                    <td className="px-3 py-4 text-neutral-600">
-                      {product.compare_at_price ? formatCurrency(product.compare_at_price) : "-"}
-                    </td>
-                    <td className="px-3 py-4 text-neutral-600">
-                      {product.badge || "-"}
-                    </td>
-                    <td className="px-3 py-4 text-neutral-600">
-                      {product.stock_qty}
-                    </td>
-                    <td className="px-3 py-4">
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${
-                          product.is_active
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-neutral-100 text-neutral-600"
-                        }`}
-                      >
-                        {product.is_active ? "Active" : "Hidden"}
-                      </span>
-                    </td>
-                    <td className="px-3 py-4">
-                      <Link
-                        href={`/admin/products/${product.id}`}
-                        className="font-medium text-red-600 hover:text-red-700"
-                      >
-                        Edit
-                      </Link>
-                    </td>
-                  </tr>
-                ))
+                products.map((product: any) => {
+                  const { cleanTitle, sku } = getProductTitleMeta(product.title);
+                  const displayTitle = cleanTitle || product.title;
+
+                  return (
+                    <tr key={product.id} className="border-b border-neutral-100">
+                      <td className="px-3 py-4">
+                        <div className="font-medium text-neutral-950">
+                          {displayTitle}
+                        </div>
+
+                        {sku ? (
+                          <div className="mt-1 text-xs font-semibold text-red-700">
+                            SKU: {sku}
+                          </div>
+                        ) : null}
+
+                        <div className="mt-1 text-xs text-neutral-500">
+                          {product.slug}
+                        </div>
+                      </td>
+
+                      <td className="px-3 py-4 text-neutral-600">
+                        {product.categories?.name ?? "-"}
+                      </td>
+
+                      <td className="px-3 py-4 text-neutral-600">
+                        {formatCurrency(product.price)}
+                      </td>
+
+                      <td className="px-3 py-4 text-neutral-600">
+                        {product.compare_at_price
+                          ? formatCurrency(product.compare_at_price)
+                          : "-"}
+                      </td>
+
+                      <td className="px-3 py-4 text-neutral-600">
+                        {product.badge || "-"}
+                      </td>
+
+                      <td className="px-3 py-4 text-neutral-600">
+                        {product.stock_qty ?? 0}
+                      </td>
+
+                      <td className="px-3 py-4">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${
+                            product.is_active
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-neutral-100 text-neutral-600"
+                          }`}
+                        >
+                          {product.is_active ? "Active" : "Hidden"}
+                        </span>
+                      </td>
+
+                      <td className="px-3 py-4">
+                        <Link
+                          href={`/admin/products/${product.id}`}
+                          className="font-medium text-red-600 hover:text-red-700"
+                        >
+                          Edit
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
