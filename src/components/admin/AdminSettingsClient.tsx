@@ -1,33 +1,45 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Mail, Lock, Plus, Save, Settings2, Shield, Trash2, UserCog } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  Building2,
+  CheckCircle2,
+  Loader2,
+  Mail,
+  MapPin,
+  Phone,
+  Plus,
+  Save,
+  Settings,
+  ShieldCheck,
+  Store,
+  Truck,
+  UserPlus,
+  Users,
+} from "lucide-react";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 type StoreSettings = {
   id?: string;
   store_name?: string | null;
-  store_email?: string | null;
-  store_phone?: string | null;
+  support_email?: string | null;
+  support_phone?: string | null;
   whatsapp_number?: string | null;
   address?: string | null;
-  announcement_text?: string | null;
-  facebook_url?: string | null;
-  instagram_url?: string | null;
-  tiktok_url?: string | null;
-  linkedin_url?: string | null;
+  free_delivery_minimum?: number | null;
+  standard_delivery_fee?: number | null;
 };
 
 type AdminUser = {
   id: string;
   email: string;
-  created_at: string;
-  last_sign_in_at: string;
-  email_confirmed_at: string;
-  banned_until: string | null;
-  is_disabled: boolean;
+  fullName: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+  lastSignInAt: string;
+  emailConfirmedAt: string;
 };
 
 type Props = {
@@ -35,592 +47,429 @@ type Props = {
   initialUsers: AdminUser[];
 };
 
-function formatDate(value?: string | null) {
-  if (!value) return "-";
-  try {
-    return new Intl.DateTimeFormat("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    }).format(new Date(value));
-  } catch {
-    return "-";
-  }
-}
-
 export default function AdminSettingsClient({
   initialSettings,
   initialUsers,
 }: Props) {
-  const [settings, setSettings] = useState<StoreSettings>({
-    store_name: initialSettings?.store_name ?? "Ram Pottery",
-    store_email: initialSettings?.store_email ?? "",
-    store_phone: initialSettings?.store_phone ?? "",
-    whatsapp_number: initialSettings?.whatsapp_number ?? "",
-    address: initialSettings?.address ?? "",
-    announcement_text: initialSettings?.announcement_text ?? "",
-    facebook_url: initialSettings?.facebook_url ?? "",
-    instagram_url: initialSettings?.instagram_url ?? "",
-    tiktok_url: initialSettings?.tiktok_url ?? "",
-    linkedin_url: initialSettings?.linkedin_url ?? "",
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  const [settingsForm, setSettingsForm] = useState({
+    id: initialSettings?.id || "",
+    store_name: initialSettings?.store_name || "Ram Pottery Ltd",
+    support_email: initialSettings?.support_email || "info@rampottery.mu",
+    support_phone: initialSettings?.support_phone || "",
+    whatsapp_number: initialSettings?.whatsapp_number || "",
+    address:
+      initialSettings?.address || "XJHP+VV Petit Raffray, Mauritius",
+    free_delivery_minimum: String(
+      initialSettings?.free_delivery_minimum ?? 3000,
+    ),
+    standard_delivery_fee: String(initialSettings?.standard_delivery_fee ?? 150),
   });
 
-  const [users, setUsers] = useState<AdminUser[]>(initialUsers);
+  const [userForm, setUserForm] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    role: "admin",
+  });
 
-  const [settingsLoading, setSettingsLoading] = useState(false);
-  const [settingsMessage, setSettingsMessage] = useState("");
-  const [settingsError, setSettingsError] = useState("");
+  function updateSettingsField(key: keyof typeof settingsForm, value: string) {
+    setSettingsForm((current) => ({
+      ...current,
+      [key]: value,
+    }));
+  }
 
-  const [newUserEmail, setNewUserEmail] = useState("");
-  const [newUserPassword, setNewUserPassword] = useState("");
-  const [userActionLoading, setUserActionLoading] = useState<string | null>(null);
-  const [userMessage, setUserMessage] = useState("");
-  const [userError, setUserError] = useState("");
-
-  const [search, setSearch] = useState("");
-
-  const filteredUsers = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter((user) => user.email.toLowerCase().includes(q));
-  }, [users, search]);
-
-  async function refreshUsers() {
-    const res = await fetch("/api/admin/users", { cache: "no-store" });
-    const json = await res.json();
-    if (res.ok) {
-      setUsers(json.data ?? []);
-    }
+  function updateUserField(key: keyof typeof userForm, value: string) {
+    setUserForm((current) => ({
+      ...current,
+      [key]: value,
+    }));
   }
 
   async function saveSettings() {
-    setSettingsLoading(true);
-    setSettingsMessage("");
-    setSettingsError("");
+    startTransition(async () => {
+      const response = await fetch("/api/admin/settings", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(settingsForm),
+      });
 
-    const res = await fetch("/api/admin/settings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(settings),
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data?.error || "Could not save settings.");
+        return;
+      }
+
+      toast.success("Store settings saved.");
+      router.refresh();
     });
-
-    const json = await res.json();
-    setSettingsLoading(false);
-
-    if (!res.ok) {
-      setSettingsError(json.error || "Unable to save settings.");
-      return;
-    }
-
-    setSettingsMessage("Settings saved successfully.");
   }
 
-  async function createUser() {
-    setUserActionLoading("create");
-    setUserMessage("");
-    setUserError("");
+  async function createUser(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
 
-    const res = await fetch("/api/admin/users", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: newUserEmail,
-        password: newUserPassword,
-      }),
-    });
-
-    const json = await res.json();
-    setUserActionLoading(null);
-
-    if (!res.ok) {
-      setUserError(json.error || "Unable to create user.");
+    if (!userForm.email.trim() || !userForm.password.trim()) {
+      toast.error("Email and password are required.");
       return;
     }
 
-    setUserMessage("New user created successfully.");
-    setNewUserEmail("");
-    setNewUserPassword("");
-    await refreshUsers();
-  }
+    startTransition(async () => {
+      const response = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userForm),
+      });
 
-  async function updateUserEmail(userId: string, email: string) {
-    setUserActionLoading(userId);
-    setUserMessage("");
-    setUserError("");
+      const data = await response.json();
 
-    const res = await fetch(`/api/admin/users/${userId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      if (!response.ok) {
+        toast.error(data?.error || "Could not create admin user.");
+        return;
+      }
+
+      toast.success("Admin user created successfully.");
+
+      setUserForm({
+        fullName: "",
+        email: "",
+        password: "",
+        role: "admin",
+      });
+
+      router.refresh();
     });
-
-    const json = await res.json();
-    setUserActionLoading(null);
-
-    if (!res.ok) {
-      setUserError(json.error || "Unable to update email.");
-      return;
-    }
-
-    setUserMessage("User email updated.");
-    await refreshUsers();
-  }
-
-  async function updateUserPassword(userId: string) {
-    const password = window.prompt("Enter new password");
-    if (!password) return;
-
-    setUserActionLoading(userId);
-    setUserMessage("");
-    setUserError("");
-
-    const res = await fetch(`/api/admin/users/${userId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
-    });
-
-    const json = await res.json();
-    setUserActionLoading(null);
-
-    if (!res.ok) {
-      setUserError(json.error || "Unable to update password.");
-      return;
-    }
-
-    setUserMessage("User password updated.");
-  }
-
-  async function toggleUserDisabled(user: AdminUser) {
-    setUserActionLoading(user.id);
-    setUserMessage("");
-    setUserError("");
-
-    const res = await fetch(`/api/admin/users/${user.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ is_disabled: !user.is_disabled }),
-    });
-
-    const json = await res.json();
-    setUserActionLoading(null);
-
-    if (!res.ok) {
-      setUserError(json.error || "Unable to update user status.");
-      return;
-    }
-
-    setUserMessage(user.is_disabled ? "User enabled." : "User disabled.");
-    await refreshUsers();
-  }
-
-  async function deleteUser(userId: string) {
-    const ok = window.confirm("Delete this user?");
-    if (!ok) return;
-
-    setUserActionLoading(userId);
-    setUserMessage("");
-    setUserError("");
-
-    const res = await fetch(`/api/admin/users/${userId}`, {
-      method: "DELETE",
-    });
-
-    const json = await res.json();
-    setUserActionLoading(null);
-
-    if (!res.ok) {
-      setUserError(json.error || "Unable to delete user.");
-      return;
-    }
-
-    setUserMessage("User deleted.");
-    await refreshUsers();
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-red-600">
-          System
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-950">
-          Settings
-        </h1>
-        <p className="mt-3 text-sm leading-7 text-neutral-500">
-          Manage store details, social links, announcements, and admin users in one premium control panel.
-        </p>
-      </div>
+    <div className="space-y-6 pb-8">
+      <section className="overflow-hidden rounded-[32px] border border-red-950/10 bg-[linear-gradient(135deg,#2b0909_0%,#4a0f0f_45%,#120505_100%)] p-5 text-white shadow-[0_24px_90px_rgba(70,20,10,0.18)] sm:p-7">
+        <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.26em] text-red-100">
+              Ram Pottery Ltd
+            </p>
 
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="space-y-6">
-          <div className="rounded-[1.8rem] border border-neutral-200 bg-white p-6 shadow-[0_12px_35px_rgba(0,0,0,0.04)]">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-600">
-                <Settings2 className="h-5 w-5" />
-              </div>
-              <h2 className="text-xl font-semibold text-neutral-950">Store Details</h2>
-            </div>
+            <h1 className="mt-3 text-3xl font-black tracking-[-0.06em] sm:text-4xl">
+              Store Settings
+            </h1>
 
-            <div className="mt-6 grid gap-5 md:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-900">
-                  Store Name
-                </label>
-                <Input
-                  value={settings.store_name ?? ""}
-                  onChange={(e) =>
-                    setSettings((prev) => ({ ...prev, store_name: e.target.value }))
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-900">
-                  Store Email
-                </label>
-                <Input
-                  value={settings.store_email ?? ""}
-                  onChange={(e) =>
-                    setSettings((prev) => ({ ...prev, store_email: e.target.value }))
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-900">
-                  Store Phone
-                </label>
-                <Input
-                  value={settings.store_phone ?? ""}
-                  onChange={(e) =>
-                    setSettings((prev) => ({ ...prev, store_phone: e.target.value }))
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-900">
-                  WhatsApp Number
-                </label>
-                <Input
-                  value={settings.whatsapp_number ?? ""}
-                  onChange={(e) =>
-                    setSettings((prev) => ({ ...prev, whatsapp_number: e.target.value }))
-                  }
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="mb-2 block text-sm font-medium text-neutral-900">
-                  Address
-                </label>
-                <Textarea
-                  className="min-h-24"
-                  value={settings.address ?? ""}
-                  onChange={(e) =>
-                    setSettings((prev) => ({ ...prev, address: e.target.value }))
-                  }
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="mb-2 block text-sm font-medium text-neutral-900">
-                  Announcement Text
-                </label>
-                <Textarea
-                  className="min-h-24"
-                  value={settings.announcement_text ?? ""}
-                  onChange={(e) =>
-                    setSettings((prev) => ({
-                      ...prev,
-                      announcement_text: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </div>
+            <p className="mt-3 max-w-2xl text-sm font-medium leading-7 text-white/70">
+              Manage store details, delivery fees and admin access from one
+              secure control center.
+            </p>
           </div>
 
-          <div className="rounded-[1.8rem] border border-neutral-200 bg-white p-6 shadow-[0_12px_35px_rgba(0,0,0,0.04)]">
-            <h2 className="text-xl font-semibold text-neutral-950">Social Media</h2>
-
-            <div className="mt-6 grid gap-5 md:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-900">
-                  Facebook URL
-                </label>
-                <Input
-                  value={settings.facebook_url ?? ""}
-                  onChange={(e) =>
-                    setSettings((prev) => ({ ...prev, facebook_url: e.target.value }))
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-900">
-                  Instagram URL
-                </label>
-                <Input
-                  value={settings.instagram_url ?? ""}
-                  onChange={(e) =>
-                    setSettings((prev) => ({ ...prev, instagram_url: e.target.value }))
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-900">
-                  TikTok URL
-                </label>
-                <Input
-                  value={settings.tiktok_url ?? ""}
-                  onChange={(e) =>
-                    setSettings((prev) => ({ ...prev, tiktok_url: e.target.value }))
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-900">
-                  LinkedIn URL
-                </label>
-                <Input
-                  value={settings.linkedin_url ?? ""}
-                  onChange={(e) =>
-                    setSettings((prev) => ({ ...prev, linkedin_url: e.target.value }))
-                  }
-                />
-              </div>
-            </div>
-
-            {settingsMessage ? (
-              <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                {settingsMessage}
-              </div>
-            ) : null}
-
-            {settingsError ? (
-              <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-                {settingsError}
-              </div>
-            ) : null}
-
-            <div className="mt-6">
-              <Button
-                type="button"
-                onClick={saveSettings}
-                disabled={settingsLoading}
-                className="h-12 rounded-xl bg-red-600 px-6 text-sm font-semibold text-white hover:bg-red-700"
-              >
-                <Save className="mr-2 h-4 w-4" />
-                {settingsLoading ? "Saving..." : "Save Settings"}
-              </Button>
-            </div>
+          <div className="grid grid-cols-3 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.08] text-center backdrop-blur">
+            <MiniStat value="Secure" label="Access" />
+            <MiniStat value="Active" label="Store" />
+            <MiniStat value={String(initialUsers.length)} label="Admins" />
           </div>
         </div>
+      </section>
 
-        <div className="space-y-6">
-          <div className="rounded-[1.8rem] border border-neutral-200 bg-white p-6 shadow-[0_12px_35px_rgba(0,0,0,0.04)]">
+      <section className="grid gap-6 xl:grid-cols-[1fr_420px]">
+        <div className="rounded-[30px] border border-neutral-200 bg-white p-5 shadow-[0_18px_65px_rgba(15,10,5,0.06)] sm:p-6">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-600">
-                <UserCog className="h-5 w-5" />
-              </div>
-              <h2 className="text-xl font-semibold text-neutral-950">Create Admin User</h2>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-900">
-                  Email
-                </label>
-                <Input
-                  value={newUserEmail}
-                  onChange={(e) => setNewUserEmail(e.target.value)}
-                  placeholder="admin@rampottery.mu"
-                />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-900">
+                <Settings className="h-5 w-5" />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-neutral-900">
-                  Password
-                </label>
-                <Input
-                  type="password"
-                  value={newUserPassword}
-                  onChange={(e) => setNewUserPassword(e.target.value)}
-                  placeholder="Enter strong password"
-                />
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-red-900">
+                  Store Configuration
+                </p>
+                <h2 className="mt-1 text-2xl font-black tracking-[-0.05em] text-neutral-950">
+                  Business Details
+                </h2>
               </div>
-
-              <Button
-                type="button"
-                onClick={createUser}
-                disabled={userActionLoading === "create"}
-                className="h-12 w-full rounded-xl bg-red-600 px-6 text-sm font-semibold text-white hover:bg-red-700"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                {userActionLoading === "create" ? "Creating..." : "Create User"}
-              </Button>
             </div>
+
+            <button
+              type="button"
+              onClick={saveSettings}
+              disabled={isPending}
+              className="inline-flex h-11 w-fit items-center justify-center gap-2 rounded-full bg-red-900 px-5 text-xs font-black uppercase tracking-[0.16em] text-white shadow-[0_14px_34px_rgba(127,29,29,0.22)] transition hover:-translate-y-0.5 hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              Save Settings
+            </button>
           </div>
 
-          <div className="rounded-[1.8rem] border border-neutral-200 bg-white p-6 shadow-[0_12px_35px_rgba(0,0,0,0.04)]">
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="text-xl font-semibold text-neutral-950">Admin Users</h2>
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search email"
-                className="max-w-[200px]"
+          <div className="grid gap-4 md:grid-cols-2">
+            <InputBlock
+              icon={Store}
+              label="Store Name"
+              value={settingsForm.store_name}
+              onChange={(value) => updateSettingsField("store_name", value)}
+            />
+
+            <InputBlock
+              icon={Mail}
+              label="Support Email"
+              type="email"
+              value={settingsForm.support_email}
+              onChange={(value) => updateSettingsField("support_email", value)}
+            />
+
+            <InputBlock
+              icon={Phone}
+              label="Support Phone"
+              value={settingsForm.support_phone}
+              onChange={(value) => updateSettingsField("support_phone", value)}
+            />
+
+            <InputBlock
+              icon={Phone}
+              label="WhatsApp Number"
+              value={settingsForm.whatsapp_number}
+              onChange={(value) => updateSettingsField("whatsapp_number", value)}
+            />
+
+            <div className="md:col-span-2">
+              <InputBlock
+                icon={MapPin}
+                label="Business Address"
+                value={settingsForm.address}
+                onChange={(value) => updateSettingsField("address", value)}
               />
             </div>
 
-            {userMessage ? (
-              <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                {userMessage}
-              </div>
-            ) : null}
+            <InputBlock
+              icon={Truck}
+              label="Free Delivery From"
+              type="number"
+              value={settingsForm.free_delivery_minimum}
+              onChange={(value) =>
+                updateSettingsField("free_delivery_minimum", value)
+              }
+            />
 
-            {userError ? (
-              <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-                {userError}
-              </div>
-            ) : null}
-
-            <div className="mt-5 space-y-4">
-              {filteredUsers.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-neutral-300 p-8 text-center text-sm text-neutral-500">
-                  No users found.
-                </div>
-              ) : (
-                filteredUsers.map((user) => (
-                  <AdminUserCard
-                    key={user.id}
-                    user={user}
-                    loading={userActionLoading === user.id}
-                    onUpdateEmail={updateUserEmail}
-                    onUpdatePassword={updateUserPassword}
-                    onToggleDisabled={toggleUserDisabled}
-                    onDelete={deleteUser}
-                  />
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-[1.8rem] border border-neutral-200 bg-white p-6 shadow-[0_12px_35px_rgba(0,0,0,0.04)]">
-            <h2 className="text-xl font-semibold text-neutral-950">Security Notes</h2>
-            <div className="mt-5 space-y-3 text-sm leading-7 text-neutral-600">
-              <p>• Only authorized admin users should access this panel.</p>
-              <p>• Use strong passwords for every admin account.</p>
-              <p>• Disable users instead of deleting when temporary access changes are needed.</p>
-              <p>• Email and password changes are applied directly through Supabase Auth.</p>
-            </div>
+            <InputBlock
+              icon={Truck}
+              label="Standard Delivery Fee"
+              type="number"
+              value={settingsForm.standard_delivery_fee}
+              onChange={(value) =>
+                updateSettingsField("standard_delivery_fee", value)
+              }
+            />
           </div>
         </div>
-      </div>
+
+        <aside className="space-y-6">
+          <div className="rounded-[30px] border border-neutral-200 bg-white p-5 shadow-[0_18px_65px_rgba(15,10,5,0.06)] sm:p-6">
+            <div className="mb-5 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-900">
+                <UserPlus className="h-5 w-5" />
+              </div>
+
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-red-900">
+                  Admin Access
+                </p>
+                <h2 className="mt-1 text-xl font-black tracking-[-0.04em] text-neutral-950">
+                  Create Admin User
+                </h2>
+              </div>
+            </div>
+
+            <form onSubmit={createUser} className="space-y-3">
+              <InputBlock
+                icon={Building2}
+                label="Full Name"
+                value={userForm.fullName}
+                onChange={(value) => updateUserField("fullName", value)}
+              />
+
+              <InputBlock
+                icon={Mail}
+                label="Email Address"
+                type="email"
+                value={userForm.email}
+                onChange={(value) => updateUserField("email", value)}
+              />
+
+              <InputBlock
+                icon={ShieldCheck}
+                label="Password"
+                type="password"
+                value={userForm.password}
+                onChange={(value) => updateUserField("password", value)}
+              />
+
+              <button
+                type="submit"
+                disabled={isPending}
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-red-900 px-5 text-xs font-black uppercase tracking-[0.16em] text-white shadow-[0_16px_42px_rgba(127,29,29,0.24)] transition hover:-translate-y-0.5 hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+                Create Admin
+              </button>
+            </form>
+          </div>
+        </aside>
+      </section>
+
+      <section className="rounded-[30px] border border-neutral-200 bg-white p-5 shadow-[0_18px_65px_rgba(15,10,5,0.06)] sm:p-6">
+        <div className="mb-5 flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-900">
+            <Users className="h-5 w-5" />
+          </div>
+
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-red-900">
+              Admin Users
+            </p>
+            <h2 className="mt-1 text-2xl font-black tracking-[-0.05em] text-neutral-950">
+              Store Access List
+            </h2>
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-2xl border border-neutral-200">
+          <div className="overflow-x-auto">
+            <table className="min-w-[820px] w-full text-left text-sm">
+              <thead className="bg-[#faf8f4] text-[10px] font-black uppercase tracking-[0.16em] text-neutral-500">
+                <tr>
+                  <th className="px-4 py-3">User</th>
+                  <th className="px-4 py-3">Role</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Confirmed</th>
+                  <th className="px-4 py-3">Last Login</th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-neutral-100">
+                {initialUsers.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-4 py-12 text-center text-sm font-semibold text-neutral-500"
+                    >
+                      No admin users found.
+                    </td>
+                  </tr>
+                ) : (
+                  initialUsers.map((user) => (
+                    <tr
+                      key={user.id}
+                      className="bg-white transition hover:bg-red-50/35"
+                    >
+                      <td className="px-4 py-4">
+                        <p className="font-black text-neutral-950">
+                          {user.fullName}
+                        </p>
+                        <p className="mt-1 text-xs font-semibold text-neutral-500">
+                          {user.email}
+                        </p>
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <span className="inline-flex rounded-full border border-red-200 bg-red-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-red-900">
+                          {user.role || "admin"}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <span
+                          className={
+                            user.isActive
+                              ? "inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-700"
+                              : "inline-flex rounded-full border border-neutral-200 bg-neutral-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-neutral-600"
+                          }
+                        >
+                          {user.isActive ? "Active" : "Disabled"}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-4">
+                        {user.emailConfirmedAt ? (
+                          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                        ) : (
+                          <span className="text-xs font-bold text-neutral-400">
+                            Pending
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="px-4 py-4 text-xs font-semibold text-neutral-500">
+                        {user.lastSignInAt
+                          ? new Date(user.lastSignInAt).toLocaleDateString(
+                              "en-GB",
+                            )
+                          : "Never"}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
 
-function AdminUserCard({
-  user,
-  loading,
-  onUpdateEmail,
-  onUpdatePassword,
-  onToggleDisabled,
-  onDelete,
+function InputBlock({
+  icon: Icon,
+  label,
+  value,
+  onChange,
+  type = "text",
 }: {
-  user: AdminUser;
-  loading: boolean;
-  onUpdateEmail: (userId: string, email: string) => Promise<void>;
-  onUpdatePassword: (userId: string) => Promise<void>;
-  onToggleDisabled: (user: AdminUser) => Promise<void>;
-  onDelete: (userId: string) => Promise<void>;
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
 }) {
-  const [email, setEmail] = useState(user.email);
-
   return (
-    <div className="rounded-2xl border border-neutral-200 p-4">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <div className="font-medium text-neutral-950">{user.email}</div>
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-medium ${
-                  user.is_disabled
-                    ? "bg-neutral-100 text-neutral-600"
-                    : "bg-emerald-50 text-emerald-700"
-                }`}
-              >
-                {user.is_disabled ? "Disabled" : "Active"}
-              </span>
-            </div>
+    <label className="block">
+      <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.16em] text-neutral-500">
+        {label}
+      </span>
 
-            <div className="mt-1 text-xs text-neutral-500">
-              Created: {formatDate(user.created_at)} • Last Sign In: {formatDate(user.last_sign_in_at)}
-            </div>
-          </div>
+      <div className="flex h-12 items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-4 transition focus-within:border-red-900/35 focus-within:ring-4 focus-within:ring-red-900/10">
+        <Icon className="h-4 w-4 shrink-0 text-red-900" />
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-50 text-red-600">
-            <Shield className="h-4 w-4" />
-          </div>
-        </div>
-
-        <div className="grid gap-3 md:grid-cols-[1fr_auto_auto_auto]">
-          <Input value={email} onChange={(e) => setEmail(e.target.value)} />
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onUpdateEmail(user.id, email)}
-            disabled={loading}
-            className="h-10 rounded-xl"
-          >
-            <Mail className="mr-2 h-4 w-4" />
-            Update Email
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onUpdatePassword(user.id)}
-            disabled={loading}
-            className="h-10 rounded-xl"
-          >
-            <Lock className="mr-2 h-4 w-4" />
-            Password
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onToggleDisabled(user)}
-            disabled={loading}
-            className="h-10 rounded-xl"
-          >
-            {user.is_disabled ? "Enable" : "Disable"}
-          </Button>
-        </div>
-
-        <div>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onDelete(user.id)}
-            disabled={loading}
-            className="h-10 rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete User
-          </Button>
-        </div>
+        <input
+          type={type}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-full w-full bg-transparent text-sm font-bold text-neutral-950 outline-none placeholder:text-neutral-400"
+        />
       </div>
+    </label>
+  );
+}
+
+function MiniStat({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="border-r border-white/10 px-3 py-4 last:border-r-0 sm:px-5">
+      <p className="truncate text-sm font-black text-white sm:text-lg">
+        {value}
+      </p>
+      <p className="mt-1 text-[8px] font-black uppercase tracking-[0.16em] text-white/50 sm:text-[9px]">
+        {label}
+      </p>
     </div>
   );
 }

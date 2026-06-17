@@ -1,72 +1,158 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requireAdminUser } from "@/lib/admin/require-admin";
+import { createClient } from "@/lib/supabase/server";
 
-export async function GET() {
-  const authCheck = await requireAdminUser();
-  if (!authCheck.ok) return authCheck.response;
+export const runtime = "nodejs";
 
-  try {
-    const admin = createAdminClient();
+function clean(value: unknown) {
+  return String(value || "").trim();
+}
 
-    const { data, error } = await admin.auth.admin.listUsers();
+async function verifyAdmin() {
+  const supabase = await createClient();
+  const admin = createAdminClient();
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
-    const users =
-      data.users?.map((user) => ({
-        id: user.id,
-        email: user.email,
-        created_at: user.created_at,
-        last_sign_in_at: user.last_sign_in_at,
-        email_confirmed_at: user.email_confirmed_at,
-        banned_until: user.banned_until,
-        is_disabled: !!user.banned_until,
-      })) ?? [];
-
-    return NextResponse.json({ data: users });
-  } catch {
-    return NextResponse.json(
-      { error: "Unable to load admin users." },
-      { status: 500 }
-    );
+  if (error || !user) {
+    return { error: "Not authenticated.", status: 401 };
   }
+
+  const { data: adminProfile } = await admin
+    .from("admin_profiles")
+    .select("id, is_active")
+    .eq("id", user.id)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (!adminProfile) {
+    return { error: "Admin access required.", status: 403 };
+  }
+
+  return { user, admin };
 }
 
 export async function POST(req: Request) {
-  const authCheck = await requireAdminUser();
-  if (!authCheck.ok) return authCheck.response;
-
   try {
-    const body = await req.json();
-    const { email, password } = body;
+    const verified = await verifyAdmin();
 
-    if (!email || !password) {
+    if ("error" in verified) {
       return NextResponse.json(
-        { error: "Email and password are required." },
-        { status: 400 }
+        { error: verified.error },
+        { status: verified.status },
       );
     }
 
-    const admin = createAdminClient();
+    const body = await req.json();
 
-    const { data, error } = await admin.auth.admin.createUser({
-      email: String(email).trim().toLowerCase(),
-      password: String(password),
-      email_confirm: true,
-    });
+    const email = clean(body.email).toLowerCase();
+    const password = String(body.password || "");
+    const fullName = clean(body.fullName) || "Admin User";
+    const role = clean(body.role) || "admin";
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!email) {
+      return NextResponse.json(
+        { error: "Email address is required." },
+        { status: 400 },
+      );
     }
 
-    return NextResponse.json({ data: data.user });
+    if (!password || password.length < 6) {
+      return NextResponse.json(
+        { error: "Password must be at least 6 characters." },
+        { status: 400 },
+      );
+    }
+
+    const listResponse = await verified.admin.auth.admin.listUsers();
+    const existingUser = listResponse.data.users.find(
+      (user) => String(user.email || "").toLowerCase() === email,
+    );
+
+    let authUser = existingUser;
+
+    if (existingUser) {
+      const { data, error } = await verified.admin.auth.admin.updateUserById(
+        existingUser.id,
+        {
+          password,
+          email_confirm: true,
+          user_metadata: {
+            full_name: fullName,
+            role,
+          },
+          app_metadata: {
+            role,
+          },
+        },
+      );
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      authUser = data.user;
+    } else {
+      const { data, error } = await verified.admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: fullName,
+          role,
+        },
+        app_metadata: {
+          role,
+        },
+      });
+
+      if (error || !data.user) {
+        return NextResponse.json(
+          { error: error?.message || "Could not create admin user." },
+          { status: 500 },
+        );
+      }
+
+      authUser = data.user;
+    }
+
+    const { error: profileError } = await verified.admin
+      .from("admin_profiles")
+      .upsert(
+        {
+          id: authUser.id,
+          email,
+          full_name: fullName,
+          role,
+          is_active: true,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "id" },
+      );
+
+    if (profileError) {
+      return NextResponse.json(
+        { error: profileError.message },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({
+      message: "Admin user created successfully.",
+      user: {
+        id: authUser.id,
+        email,
+        fullName,
+        role,
+      },
+    });
   } catch {
     return NextResponse.json(
-      { error: "Unable to create user." },
-      { status: 500 }
+      { error: "Could not create admin user." },
+      { status: 500 },
     );
   }
 }

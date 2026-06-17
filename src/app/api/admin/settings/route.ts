@@ -1,77 +1,122 @@
 import { NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { requireAdminUser } from "@/lib/admin/require-admin";
 
-export async function GET() {
-  const authCheck = await requireAdminUser();
-  if (!authCheck.ok) return authCheck.response;
+export const runtime = "nodejs";
 
-  try {
-    const supabase = await createClient();
+function clean(value: unknown) {
+  return String(value || "").trim();
+}
 
-    const { data, error } = await supabase
-      .from("store_settings")
-      .select("*")
-      .limit(1)
-      .maybeSingle();
+function numberValue(value: unknown, fallback: number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+async function verifyAdmin() {
+  const supabase = await createClient();
+  const admin = createAdminClient();
 
-    return NextResponse.json({ data });
-  } catch {
-    return NextResponse.json(
-      { error: "Unable to load settings." },
-      { status: 500 }
-    );
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return { error: "Not authenticated.", status: 401 };
   }
+
+  const { data: adminProfile } = await admin
+    .from("admin_profiles")
+    .select("id, is_active")
+    .eq("id", user.id)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (!adminProfile) {
+    return { error: "Admin access required.", status: 403 };
+  }
+
+  return { user, admin };
 }
 
 export async function PATCH(req: Request) {
-  const authCheck = await requireAdminUser();
-  if (!authCheck.ok) return authCheck.response;
-
   try {
-    const supabase = await createClient();
+    const verified = await verifyAdmin();
+
+    if ("error" in verified) {
+      return NextResponse.json(
+        { error: verified.error },
+        { status: verified.status },
+      );
+    }
+
     const body = await req.json();
 
-    const { data: existing } = await supabase
-      .from("store_settings")
-      .select("id")
-      .limit(1)
-      .maybeSingle();
+    const payload = {
+      store_name: clean(body.store_name) || "Ram Pottery Ltd",
+      support_email: clean(body.support_email),
+      support_phone: clean(body.support_phone),
+      whatsapp_number: clean(body.whatsapp_number),
+      address: clean(body.address),
+      free_delivery_minimum: numberValue(body.free_delivery_minimum, 3000),
+      standard_delivery_fee: numberValue(body.standard_delivery_fee, 150),
+      updated_at: new Date().toISOString(),
+    };
 
-    if (!existing?.id) {
-      const { data, error } = await supabase
+    const settingId = clean(body.id);
+
+    if (settingId) {
+      const { data, error } = await verified.admin
         .from("store_settings")
-        .insert(body)
-        .select()
+        .update(payload)
+        .eq("id", settingId)
+        .select("*")
         .single();
 
       if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
 
-      return NextResponse.json({ data });
+      return NextResponse.json({ settings: data });
     }
 
-    const { data, error } = await supabase
+    const { data: existing } = await verified.admin
       .from("store_settings")
-      .update(body)
-      .eq("id", existing.id)
-      .select()
+      .select("id")
+      .limit(1)
+      .maybeSingle();
+
+    if (existing?.id) {
+      const { data, error } = await verified.admin
+        .from("store_settings")
+        .update(payload)
+        .eq("id", existing.id)
+        .select("*")
+        .single();
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ settings: data });
+    }
+
+    const { data, error } = await verified.admin
+      .from("store_settings")
+      .insert(payload)
+      .select("*")
       .single();
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ data });
+    return NextResponse.json({ settings: data });
   } catch {
     return NextResponse.json(
-      { error: "Unable to save settings." },
-      { status: 500 }
+      { error: "Could not save store settings." },
+      { status: 500 },
     );
   }
 }

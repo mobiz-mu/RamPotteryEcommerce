@@ -1,31 +1,41 @@
 import AdminSettingsClient from "@/components/admin/AdminSettingsClient";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminSettingsPage() {
   const supabase = await createClient();
   const admin = createAdminClient();
 
-  const [{ data: settings }, usersResponse] = await Promise.all([
-    supabase.from("store_settings").select("*").limit(1).maybeSingle(),
-    admin.auth.admin.listUsers(),
-  ]);
+  const [{ data: settings }, { data: adminProfiles }, usersResponse] =
+    await Promise.all([
+      supabase.from("store_settings").select("*").limit(1).maybeSingle(),
+      supabase
+        .from("admin_profiles")
+        .select("id, email, full_name, role, is_active, created_at, updated_at")
+        .order("created_at", { ascending: false }),
+      admin.auth.admin.listUsers(),
+    ]);
+
+  const profiles = adminProfiles ?? [];
 
   const users =
-    usersResponse.data?.users?.map((user) => ({
-      id: user.id,
-      email: user.email ?? "",
-      created_at: user.created_at ?? "",
-      last_sign_in_at: user.last_sign_in_at ?? "",
-      email_confirmed_at: user.email_confirmed_at ?? "",
-      banned_until: user.banned_until ?? null,
-      is_disabled: !!user.banned_until,
-    })) ?? [];
+    usersResponse.data?.users?.map((user) => {
+      const profile = profiles.find((item) => item.id === user.id);
 
-  return (
-    <AdminSettingsClient
-      initialSettings={settings}
-      initialUsers={users}
-    />
-  );
+      return {
+        id: user.id,
+        email: user.email ?? profile?.email ?? "",
+        fullName:
+          profile?.full_name ||
+          String(user.user_metadata?.full_name || "").trim() ||
+          "Admin User",
+        role: profile?.role || String(user.app_metadata?.role || "admin"),
+        isActive: profile?.is_active ?? !user.banned_until,
+        createdAt: user.created_at ?? profile?.created_at ?? "",
+        lastSignInAt: user.last_sign_in_at ?? "",
+        emailConfirmedAt: user.email_confirmed_at ?? "",
+      };
+    }) ?? [];
+
+  return <AdminSettingsClient initialSettings={settings} initialUsers={users} />;
 }
