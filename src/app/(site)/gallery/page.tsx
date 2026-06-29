@@ -1,6 +1,7 @@
 ﻿import type { Metadata } from "next";
 import Image from "next/image";
 import GalleryScroller from "@/components/gallery/GalleryScroller";
+import LazyYoutubeVideo from "@/components/gallery/LazyYoutubeVideo";
 
 const siteUrl = "https://rampottery.mu";
 
@@ -182,6 +183,18 @@ const gallerySections: GallerySection[] = [
         src: "/gallery/Greencoast-International-School/Greencoast-International-School3.webp",
         alt: "Ram Pottery creative school workshop Mauritius",
       },
+      {
+        src: "/gallery/Radisson-blu/Radisson-blu3.webp",
+        alt: "Ram Pottery school pottery activity display at Greencoast International School",
+      },
+      {
+        src: "/gallery/Radisson-blu/Radisson-blu4.webp",
+        alt: "Students exploring handmade pottery with Ram Pottery",
+      },
+      {
+        src: "/gallery/Radisson-blu/Radisson-blu5.webp",
+        alt: "Ram Pottery creative pottery demonstration for students",
+      },
     ],
   },
   {
@@ -227,18 +240,6 @@ const gallerySections: GallerySection[] = [
       "Ram Pottery hotel showcase featuring handmade pottery, ceramic décor and artisan collections at Radisson Blu.",
     images: [
       {
-        src: "/gallery/Radisson-blu/Radisson-blu3.webp",
-        alt: "Ram Pottery handmade pottery showcase at Radisson Blu",
-      },
-      {
-        src: "/gallery/Radisson-blu/Radisson-blu4.webp",
-        alt: "Ram Pottery ceramic décor display at Radisson Blu Mauritius",
-      },
-      {
-        src: "/gallery/Radisson-blu/Radisson-blu5.webp",
-        alt: "Ram Pottery artisan pottery collection at Radisson Blu",
-      },
-      {
         src: "/gallery/Radisson-blu/Radisson-blu1.webp",
         alt: "Ram Pottery hotel pottery exhibition Mauritius",
       },
@@ -269,52 +270,10 @@ const galleryJsonLd = {
   })),
 };
 
-function getYoutubeEmbedUrl(videoId: string) {
-  const params = new URLSearchParams({
-    autoplay: "1",
-    mute: "1",
-    loop: "1",
-    playlist: videoId,
-    controls: "0",
-    rel: "0",
-    modestbranding: "1",
-    playsinline: "1",
-    enablejsapi: "0",
-    iv_load_policy: "3",
-    fs: "0",
-  });
-
-  return `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
-}
-
-function VideoItem({
-  video,
-  priority = false,
-}: {
-  video: GalleryVideo;
-  priority?: boolean;
-}) {
+function VideoItem({ video }: { video: GalleryVideo }) {
   return (
     <article className="w-[76vw] shrink-0 sm:w-[280px] md:w-[310px] lg:w-[330px]">
-      <div className="aspect-square w-full overflow-hidden rounded-[28px] border border-neutral-200 bg-neutral-950 shadow-[0_18px_60px_rgba(15,10,5,0.09)]">
-        <iframe
-          src={getYoutubeEmbedUrl(video.youtubeId)}
-          title={video.title}
-          className="h-full w-full"
-          loading={priority ? "eager" : "lazy"}
-          allow="autoplay; encrypted-media; picture-in-picture"
-          referrerPolicy="strict-origin-when-cross-origin"
-          allowFullScreen
-        />
-      </div>
-
-      <h3 className="mt-4 line-clamp-2 text-sm font-black leading-5 tracking-[-0.02em] text-neutral-950">
-        {video.title}
-      </h3>
-
-      <p className="mt-2 line-clamp-3 text-sm leading-6 text-neutral-600">
-        {video.description}
-      </p>
+      <LazyYoutubeVideo youtubeId={video.youtubeId} title={video.title} />
     </article>
   );
 }
@@ -327,7 +286,7 @@ function ImageItem({
   priority?: boolean;
 }) {
   return (
-    <div className="group relative aspect-square w-[62vw] shrink-0 overflow-hidden rounded-[28px] border border-neutral-200 bg-[#faf6ef] shadow-[0_14px_45px_rgba(15,10,5,0.06)] sm:w-[210px] md:w-[235px] lg:w-[255px]">
+    <div className="group relative aspect-square w-[62vw] shrink-0 overflow-hidden rounded-[30px] border border-neutral-200 bg-white shadow-[0_16px_45px_rgba(15,10,5,0.07)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(15,10,5,0.12)] sm:w-[210px] md:w-[235px] lg:w-[255px]">
       <Image
         src={image.src}
         alt={image.alt}
@@ -335,10 +294,13 @@ function ImageItem({
         sizes="(max-width: 640px) 62vw, (max-width: 1024px) 235px, 255px"
         loading={priority ? "eager" : "lazy"}
         priority={priority}
-        className="object-cover transition duration-700 group-hover:scale-110"
+        quality={75}
+        className="object-cover transition duration-700 group-hover:scale-105"
       />
 
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/16 via-transparent to-transparent opacity-0 transition duration-500 group-hover:opacity-100" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/18 via-transparent to-transparent opacity-0 transition duration-500 group-hover:opacity-100" />
+
+      <div className="pointer-events-none absolute inset-0 rounded-[30px] ring-1 ring-inset ring-white/35" />
     </div>
   );
 }
@@ -354,7 +316,7 @@ function GallerySectionBlock({
   const imageCount = section.images.length;
 
   return (
-    <section className="mx-auto max-w-7xl border-t border-neutral-200 px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+    <section className="mx-auto max-w-7xl border-t border-neutral-200/80 bg-white px-4 py-10 [content-visibility:auto] [contain-intrinsic-size:900px] sm:px-6 lg:px-8 lg:py-14">
       <div className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-red-900">
@@ -386,12 +348,8 @@ function GallerySectionBlock({
       {section.videos && section.videos.length > 0 ? (
         <div className="mt-8">
           <GalleryScroller label={`${section.displayTitle} videos`}>
-            {section.videos.map((video, index) => (
-              <VideoItem
-                key={video.youtubeId}
-                video={video}
-                priority={sectionIndex === 0 && index === 0}
-              />
+            {section.videos.map((video) => (
+              <VideoItem key={video.youtubeId} video={video} />
             ))}
           </GalleryScroller>
         </div>

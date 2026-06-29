@@ -1,4 +1,3 @@
-
 import {
   HandHelping,
   LockKeyhole,
@@ -9,54 +8,62 @@ import {
 
 type TrustItem = {
   icon: LucideIcon;
-  lines: string[];
+  title: string;
+  subtitle: string;
 };
 
 const items: TrustItem[] = [
   {
     icon: Truck,
-    lines: ["Free Delivery As", "From Rs3,000"],
+    title: "Free Delivery",
+    subtitle: "As from Rs 3,000",
   },
   {
     icon: Plane,
-    lines: ["We Ship To", "Rodrigues Island"],
+    title: "Rodrigues Delivery",
+    subtitle: "We ship to Rodrigues Island",
   },
   {
     icon: HandHelping,
-    lines: ["Best of Handmade", "Pottery"],
+    title: "Handmade Pottery",
+    subtitle: "Crafted with care",
   },
   {
     icon: LockKeyhole,
-    lines: ["Shop Securely", "Online With Us"],
+    title: "Secure Shopping",
+    subtitle: "Shop safely online",
   },
 ];
 
 export default function TrustStrip() {
   return (
-    <section className="bg-white py-8 sm:py-10 lg:py-12">
+    <section className="relative overflow-hidden bg-white py-9 sm:py-11 lg:py-12">
       <div className="container-padded">
-        <div className="mx-auto grid w-full max-w-[900px] grid-cols-2 place-items-center gap-4 sm:gap-5 lg:grid-cols-4">
+        <div className="mx-auto grid w-full max-w-[1050px] grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
           {items.map((item) => {
             const Icon = item.icon;
 
             return (
               <div
-                key={item.lines.join("-")}
-                className="group relative flex h-[145px] w-full max-w-[155px] flex-col items-center justify-center overflow-hidden rounded-[1.65rem] bg-[linear-gradient(135deg,#ec1b23_0%,#8f060b_50%,#080000_100%)] px-4 py-5 text-center shadow-[0_14px_35px_rgba(0,0,0,0.12)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_45px_rgba(0,0,0,0.18)] sm:h-[170px] sm:max-w-[180px] sm:rounded-[1.9rem] lg:h-[168px] lg:max-w-[180px]"
+                key={item.title}
+                className="group relative overflow-hidden rounded-[1.6rem] border border-red-100 bg-[linear-gradient(135deg,#ffffff_0%,#fff5f5_42%,#ffffff_100%)] p-4 text-center shadow-[0_14px_35px_rgba(120,0,0,0.10)] transition duration-300 hover:-translate-y-1 hover:border-red-200 hover:shadow-[0_22px_55px_rgba(120,0,0,0.16)] sm:p-5"
               >
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,0.18),transparent_34%),linear-gradient(120deg,rgba(255,255,255,0.09),transparent_42%)]" />
+                <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-red-100/70" />
+                <div className="pointer-events-none absolute -left-12 bottom-0 h-24 w-24 rounded-full bg-red-50" />
 
-                <div className="relative mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-white/90 text-white sm:h-20 sm:w-20">
-                  <Icon className="h-7 w-7 stroke-[2.3] sm:h-9 sm:w-9" />
+                <div className="relative mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#ec1b23,#8f060b)] text-white shadow-[0_12px_28px_rgba(201,15,24,0.32)] sm:h-16 sm:w-16">
+                  <Icon className="h-7 w-7 stroke-[2.2] sm:h-8 sm:w-8" />
                 </div>
 
-                <h3 className="relative text-[14px] font-semibold leading-snug tracking-[-0.02em] text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.32)] sm:text-[16px] lg:text-[16px]">
-                  {item.lines.map((line) => (
-                    <span key={line} className="block">
-                      {line}
-                    </span>
-                  ))}
+                <h3 className="relative text-[15px] font-bold tracking-[-0.03em] text-[#231111] sm:text-[17px]">
+                  {item.title}
                 </h3>
+
+                <p className="relative mt-1 text-[12px] font-medium leading-snug text-[#7d3b3b] sm:text-[13px]">
+                  {item.subtitle}
+                </p>
+
+                <div className="relative mx-auto mt-4 h-[3px] w-9 rounded-full bg-[linear-gradient(90deg,#ec1b23,#8f060b)] transition duration-300 group-hover:w-14" />
               </div>
             );
           })}

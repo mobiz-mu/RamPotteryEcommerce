@@ -144,13 +144,19 @@ export default function Footer() {
                 <span>{SITE_CONFIG.address}</span>
               </p>
 
-              <Link
-                href={`tel:${SITE_CONFIG.phone}`}
-                className="flex items-center gap-3 transition hover:text-red-100"
-              >
-                <Phone className="h-4 w-4 shrink-0 text-red-100" />
-                <span>{SITE_CONFIG.phone}</span>
+              <div className="flex items-center gap-3 transition hover:text-red-100">
+                 <Phone className="h-4 w-4 shrink-0 text-red-100" />
+
+              <span>
+                <Link href={`tel:${SITE_CONFIG.phone}`} className="transition hover:text-red-100">
+                 {SITE_CONFIG.phone}
               </Link>
+               {" / "}
+              <Link href="tel:+23058060268" className="transition hover:text-red-100">
+               +230 58060268
+              </Link>
+             </span>
+            </div>
 
               <Link
                 href={`mailto:${SITE_CONFIG.email}`}
