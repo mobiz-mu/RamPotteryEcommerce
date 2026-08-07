@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useState } from "react";
+import { Suspense, useState, type FormEvent, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Eye,
@@ -37,7 +37,7 @@ function LoginPageInner() {
     password: "",
   });
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     const email = form.email.trim().toLowerCase();
@@ -80,11 +80,11 @@ function LoginPageInner() {
   }
 
   return (
-    <main className="min-h-screen bg-white px-4 py-8 text-neutral-950 sm:px-6 lg:px-8">
-      <section className="mx-auto grid min-h-[calc(100vh-90px)] max-w-6xl items-center gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="hidden lg:block">
-          <p className="text-xs font-black uppercase tracking-[0.34em] text-red-900">
-            Ram Pottery Account
+    <main className="bg-[#faf8f4]">
+      <section className="container-padded grid min-h-[calc(100vh-120px)] items-center gap-10 py-12 lg:grid-cols-[minmax(0,1fr)_460px] lg:py-16">
+        <div>
+          <p className="inline-flex rounded-full bg-red-50 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-red-900">
+            Customer Account
           </p>
 
           <h1 className="mt-5 max-w-xl text-5xl font-black leading-[0.98] tracking-[-0.06em] text-neutral-950">
@@ -92,15 +92,15 @@ function LoginPageInner() {
           </h1>
 
           <p className="mt-6 max-w-lg text-base leading-8 text-neutral-600">
-            Login to continue your Ram Pottery shopping experience, manage your
-            customer account and access a smoother checkout journey.
+            Login to continue shopping, manage your customer account and enjoy a
+            smoother checkout journey.
           </p>
 
           <div className="mt-8 grid max-w-md gap-3">
             {[
               "Secure customer login",
               "Access your account instantly",
-              "Continue shopping with Ram Pottery",
+              "Continue shopping easily",
             ].map((item) => (
               <div
                 key={item}
@@ -125,7 +125,7 @@ function LoginPageInner() {
               </h2>
 
               <p className="mt-2 text-sm leading-6 text-neutral-500">
-                Access your Ram Pottery account.
+                Access your customer account.
               </p>
             </div>
 
@@ -147,7 +147,7 @@ function LoginPageInner() {
                     onChange={(e) =>
                       setForm((s) => ({ ...s, email: e.target.value }))
                     }
-                    placeholder="your@email.com"
+                    placeholder="Enter Email Address"
                     autoComplete="email"
                     className="h-full border-0 bg-transparent px-0 text-sm font-semibold shadow-none outline-none focus-visible:ring-0"
                   />
@@ -165,7 +165,7 @@ function LoginPageInner() {
                     onChange={(e) =>
                       setForm((s) => ({ ...s, password: e.target.value }))
                     }
-                    placeholder="Enter password"
+                    placeholder="Enter Password"
                     autoComplete="current-password"
                     className="h-full border-0 bg-transparent px-0 text-sm font-semibold shadow-none outline-none focus-visible:ring-0"
                   />
@@ -219,7 +219,7 @@ function LoginPageInner() {
             </form>
 
             <p className="mt-6 text-center text-sm font-semibold text-neutral-500">
-              New to Ram Pottery?{" "}
+              New customer?{" "}
               <Link
                 href="/signup"
                 className="font-black text-red-900 transition hover:text-red-700"
@@ -236,13 +236,11 @@ function LoginPageInner() {
 
 function LoginPageLoading() {
   return (
-    <main className="min-h-screen bg-white px-4 py-8 text-neutral-950 sm:px-6 lg:px-8">
-      <section className="mx-auto flex min-h-[calc(100vh-90px)] max-w-6xl items-center justify-center">
-        <div className="rounded-[30px] border border-neutral-200 bg-white p-8 text-center shadow-[0_24px_90px_rgba(15,10,5,0.1)]">
-          <Loader2 className="mx-auto h-6 w-6 animate-spin text-red-900" />
-          <p className="mt-4 text-sm font-bold text-neutral-500">
-            Loading login page...
-          </p>
+    <main className="bg-[#faf8f4]">
+      <section className="container-padded flex min-h-[calc(100vh-120px)] items-center justify-center py-12">
+        <div className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-5 py-4 text-sm font-bold text-neutral-600 shadow-[0_12px_35px_rgba(15,10,5,0.045)]">
+          <Loader2 className="h-4 w-4 animate-spin text-red-900" />
+          Loading login page...
         </div>
       </section>
     </main>
@@ -254,13 +252,14 @@ function Field({
   children,
 }: {
   label: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-black uppercase tracking-[0.16em] text-neutral-500">
+      <label className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-neutral-500">
         {label}
       </label>
+
       {children}
     </div>
   );

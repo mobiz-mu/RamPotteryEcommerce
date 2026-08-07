@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
   Loader2,
@@ -110,9 +110,9 @@ export default function CheckoutForm() {
   }
 
   return (
-    <div>
+    <div className="rounded-[32px] border border-neutral-200 bg-[#faf8f4] p-5 shadow-[0_18px_60px_rgba(15,10,5,0.06)] sm:p-7">
       <div className="mb-6">
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-red-900">
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-red-900">
           Checkout Details
         </p>
 
@@ -135,7 +135,7 @@ export default function CheckoutForm() {
           >
             <Input
               {...form.register("customerName")}
-              placeholder="Enter your full name"
+              placeholder="Enter Full Name"
               autoComplete="name"
               className="h-full border-0 bg-transparent px-0 text-sm font-semibold shadow-none outline-none focus-visible:ring-0"
             />
@@ -148,7 +148,7 @@ export default function CheckoutForm() {
           >
             <Input
               {...form.register("phone")}
-              placeholder="230 5778 8884"
+              placeholder="Enter Phone Number"
               autoComplete="tel"
               className="h-full border-0 bg-transparent px-0 text-sm font-semibold shadow-none outline-none focus-visible:ring-0"
             />
@@ -163,7 +163,7 @@ export default function CheckoutForm() {
           >
             <Input
               {...form.register("email")}
-              placeholder="your@email.com"
+              placeholder="Enter Email Address"
               autoComplete="email"
               className="h-full border-0 bg-transparent px-0 text-sm font-semibold shadow-none outline-none focus-visible:ring-0"
             />
@@ -172,7 +172,8 @@ export default function CheckoutForm() {
           <Field icon={<MapPin className="h-4 w-4" />} label="Area / Region">
             <Input
               {...form.register("area")}
-              placeholder="Petit Raffray"
+              placeholder="Enter Area / Region"
+              autoComplete="address-level2"
               className="h-full border-0 bg-transparent px-0 text-sm font-semibold shadow-none outline-none focus-visible:ring-0"
             />
           </Field>
@@ -184,7 +185,8 @@ export default function CheckoutForm() {
         >
           <Textarea
             {...form.register("address")}
-            placeholder="Enter your full delivery address"
+            placeholder="Enter Delivery Address"
+            autoComplete="street-address"
             className="min-h-24 rounded-2xl border-neutral-200 bg-white text-sm font-semibold focus-visible:ring-red-900/10"
           />
         </TextField>
@@ -192,7 +194,7 @@ export default function CheckoutForm() {
         <TextField label="Additional Note">
           <Textarea
             {...form.register("note")}
-            placeholder="Add any delivery notes or order instructions"
+            placeholder="Enter Additional Note"
             className="min-h-20 rounded-2xl border-neutral-200 bg-white text-sm font-semibold focus-visible:ring-red-900/10"
           />
         </TextField>
@@ -226,14 +228,14 @@ function Field({
   error,
   children,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   label: string;
   error?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.16em] text-neutral-500">
+      <label className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-neutral-500">
         {label}
       </label>
 
@@ -256,11 +258,11 @@ function TextField({
 }: {
   label: string;
   error?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.16em] text-neutral-500">
+      <label className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-neutral-500">
         {label}
       </label>
 

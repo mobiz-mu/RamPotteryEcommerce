@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, type FormEvent, type ReactNode } from "react";
 import {
   Eye,
   EyeOff,
@@ -17,8 +16,6 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 export default function SignupPage() {
-  const router = useRouter();
-
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -28,7 +25,7 @@ export default function SignupPage() {
     password: "",
   });
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     const fullName = form.fullName.trim();
@@ -77,11 +74,11 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white px-4 py-8 text-neutral-950 sm:px-6 lg:px-8">
-      <section className="mx-auto grid min-h-[calc(100vh-90px)] max-w-6xl items-center gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="hidden lg:block">
-          <p className="text-xs font-black uppercase tracking-[0.34em] text-red-900">
-            Ram Pottery Account
+    <main className="bg-[#faf8f4]">
+      <section className="container-padded grid min-h-[calc(100vh-120px)] items-center gap-10 py-12 lg:grid-cols-[minmax(0,1fr)_460px] lg:py-16">
+        <div>
+          <p className="inline-flex rounded-full bg-red-50 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-red-900">
+            Customer Account
           </p>
 
           <h1 className="mt-5 max-w-xl text-5xl font-black leading-[0.98] tracking-[-0.06em] text-neutral-950">
@@ -89,15 +86,14 @@ export default function SignupPage() {
           </h1>
 
           <p className="mt-6 max-w-lg text-base leading-8 text-neutral-600">
-            Enjoy a smoother shopping experience with Ram Pottery Mauritius.
-            Create your account, login instantly, and continue exploring
-            handcrafted pottery collections.
+            Create your customer account, login instantly, and enjoy a smoother
+            checkout experience.
           </p>
 
           <div className="mt-8 grid max-w-md gap-3">
             {[
               "No email verification required",
-              "Secure Supabase customer account",
+              "Secure customer account",
               "Fast login after signup",
             ].map((item) => (
               <div
@@ -123,7 +119,7 @@ export default function SignupPage() {
               </h2>
 
               <p className="mt-2 text-sm leading-6 text-neutral-500">
-                Create your Ram Pottery account.
+                Create your customer account.
               </p>
             </div>
 
@@ -131,13 +127,14 @@ export default function SignupPage() {
               <Field label="Full Name">
                 <div className="flex h-12 items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-4 transition focus-within:border-red-900/35 focus-within:ring-4 focus-within:ring-red-900/10">
                   <User className="h-4 w-4 text-red-900" />
+
                   <Input
                     required
                     value={form.fullName}
                     onChange={(e) =>
                       setForm((s) => ({ ...s, fullName: e.target.value }))
                     }
-                    placeholder="Your full name"
+                    placeholder="Enter Full Name"
                     autoComplete="name"
                     className="h-full border-0 bg-transparent px-0 text-sm font-semibold shadow-none outline-none focus-visible:ring-0"
                   />
@@ -147,6 +144,7 @@ export default function SignupPage() {
               <Field label="Email Address">
                 <div className="flex h-12 items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-4 transition focus-within:border-red-900/35 focus-within:ring-4 focus-within:ring-red-900/10">
                   <Mail className="h-4 w-4 text-red-900" />
+
                   <Input
                     required
                     type="email"
@@ -154,7 +152,7 @@ export default function SignupPage() {
                     onChange={(e) =>
                       setForm((s) => ({ ...s, email: e.target.value }))
                     }
-                    placeholder="your@email.com"
+                    placeholder="Enter Email Address"
                     autoComplete="email"
                     className="h-full border-0 bg-transparent px-0 text-sm font-semibold shadow-none outline-none focus-visible:ring-0"
                   />
@@ -173,7 +171,7 @@ export default function SignupPage() {
                     onChange={(e) =>
                       setForm((s) => ({ ...s, password: e.target.value }))
                     }
-                    placeholder="Minimum 6 characters"
+                    placeholder="Enter Password"
                     autoComplete="new-password"
                     className="h-full border-0 bg-transparent px-0 text-sm font-semibold shadow-none outline-none focus-visible:ring-0"
                   />
@@ -230,13 +228,14 @@ function Field({
   children,
 }: {
   label: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-black uppercase tracking-[0.16em] text-neutral-500">
+      <label className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-neutral-500">
         {label}
       </label>
+
       {children}
     </div>
   );

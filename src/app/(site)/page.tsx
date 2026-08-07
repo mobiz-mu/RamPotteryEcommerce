@@ -10,6 +10,7 @@ import OurClients from "@/components/home/OurClients";
 import Newsletter from "@/components/home/Newsletter";
 import GoogleReviewsStrip from "@/components/home/GoogleReviewsStrip";
 import WhyChooseUs from "@/components/home/WhyChooseUs";
+import ClayPowderLaunch from "@/components/home/ClayPowderLaunch";
 
 const siteUrl = "https://rampottery.mu";
 
@@ -121,6 +122,7 @@ export default function HomePage() {
         <Hero />
 
         <div className="relative z-10">
+          <ClayPowderLaunch />
           <TrustStrip />
           <CategoryExplorer />
           <CategoryRow />

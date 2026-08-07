@@ -109,6 +109,25 @@ export const heroSlides: HeroSlide[] = [
 
 export const products: Product[] = [
   {
+  id: "premium-clay-powder",
+  title: "Premium Clay Powder",
+  slug: "premium-clay-powder",
+  description:
+    "Premium Clay Powder is a new launch product for DIY pottery projects, school activities, creative workshops and handmade clay creations. Each pouch contains 1 Kg of clay powder.",
+  price: 110,
+  salePrice: 98,
+  category:
+    categories.find((category) => category.slug === "other-category") ??
+    categories[0],
+  images: [
+    {
+      id: "premium-clay-powder-main",
+      imageUrl: "/products/premium-clay.png",
+      alt: "Premium Clay Powder pouch",
+    },
+  ],
+},
+  {
     id: "1",
     title: "Frankincense Dhoop Dish - Royal Blue",
     slug: "frankincense-dhoop-dish-royal-blue",
