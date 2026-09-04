@@ -11,7 +11,7 @@ import Newsletter from "@/components/home/Newsletter";
 import GoogleReviewsStrip from "@/components/home/GoogleReviewsStrip";
 import WhyChooseUs from "@/components/home/WhyChooseUs";
 import ClayPowderLaunch from "@/components/home/ClayPowderLaunch";
-import PromotionBanner from "@/components/home/PromotionBanner";
+
 
 const siteUrl = "https://rampottery.mu";
 
@@ -123,7 +123,6 @@ export default function HomePage() {
         <Hero />
 
         <div className="relative z-10">
-          <PromotionBanner />
           <ClayPowderLaunch />
           <TrustStrip />
           <CategoryExplorer />
