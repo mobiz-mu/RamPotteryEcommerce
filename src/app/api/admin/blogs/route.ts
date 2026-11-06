@@ -1,7 +1,10 @@
+import { requireAdminApi } from "@/lib/admin/session";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export async function GET() {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
   const { data, error } = await supabaseAdmin
     .from("blogs")
     .select("*")
@@ -15,6 +18,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
 

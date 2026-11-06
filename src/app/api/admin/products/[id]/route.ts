@@ -1,3 +1,4 @@
+import { requireAdminApi } from "@/lib/admin/session";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -6,6 +7,8 @@ type RouteContext = {
 };
 
 export async function GET(_: Request, { params }: RouteContext) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
   const { id } = await params;
   const supabase = await createClient();
 
@@ -33,6 +36,8 @@ export async function GET(_: Request, { params }: RouteContext) {
 }
 
 export async function PATCH(req: Request, { params }: RouteContext) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
   try {
     const { id } = await params;
     const supabase = await createClient();
@@ -121,6 +126,8 @@ export async function PATCH(req: Request, { params }: RouteContext) {
 }
 
 export async function DELETE(_: Request, { params }: RouteContext) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
   try {
     const { id } = await params;
     const supabase = await createClient();

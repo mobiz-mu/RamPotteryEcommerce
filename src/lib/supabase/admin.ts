@@ -1,3 +1,6 @@
+// Service-role client: bypasses RLS. Server-only — importing this from a
+// client component fails the build, so the key can never reach the browser.
+import "server-only";
 import { createClient } from "@supabase/supabase-js";
 
 export function createAdminClient() {
