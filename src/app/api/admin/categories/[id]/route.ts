@@ -1,3 +1,4 @@
+import { requireAdminApi } from "@/lib/admin/session";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -6,6 +7,8 @@ type Props = {
 };
 
 export async function GET(_: Request, { params }: Props) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
   const { id } = await params;
   const supabase = await createClient();
 
@@ -23,6 +26,8 @@ export async function GET(_: Request, { params }: Props) {
 }
 
 export async function PATCH(req: Request, { params }: Props) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
   try {
     const { id } = await params;
     const supabase = await createClient();
@@ -71,6 +76,8 @@ export async function PATCH(req: Request, { params }: Props) {
 }
 
 export async function DELETE(_: Request, { params }: Props) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
   try {
     const { id } = await params;
     const supabase = await createClient();

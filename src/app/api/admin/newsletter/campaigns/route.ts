@@ -1,7 +1,10 @@
+import { requireAdminApi } from "@/lib/admin/session";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: Request) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
   try {
     const supabase = await createClient();
     const body = await req.json();
